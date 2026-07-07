@@ -169,8 +169,8 @@ APP_HTML = r"""<!doctype html>
     .muted-line{white-space:pre-line}
     @media(max-width:1000px){.app{grid-template-columns:1fr}.editor{border-right:0;border-bottom:1px solid #c9d3d7}.sheet{transform:scale(.72);transform-origin:top center;margin-bottom:-38mm}}
     @media(max-width:640px){.editor{padding:12px}.actions{position:sticky;top:0;z-index:2;padding:8px 0;background:var(--panel)}.actions button{min-height:42px}.row{grid-template-columns:1fr}.saved-list{max-height:130px}.preview{padding:12px}.sheet{transform:scale(.56);margin-bottom:-80mm}}
-    @page{size:A4 landscape;margin:0}
-    @media print{body{background:#fff}.editor{display:none}.app,.preview{display:block;min-height:0;padding:0;overflow:visible}.sheet{position:relative;width:148.5mm;height:210mm;min-height:210mm;padding:0;box-shadow:none;page-break-after:avoid;overflow:hidden}#receipt{position:absolute;left:3mm;top:205mm;width:200mm;min-height:142.5mm;margin:0;transform:rotate(-90deg);transform-origin:top left}}
+    @page{size:A4 portrait;margin:0}
+    @media print{body{background:#fff}.editor{display:none}.app,.preview{display:block;min-height:0;padding:0;overflow:visible}.sheet{position:relative;width:210mm;height:148.5mm;min-height:148.5mm;padding:0;box-shadow:none;page-break-after:avoid;overflow:hidden}#receipt{position:absolute;left:204mm;top:3mm;width:142.5mm;min-height:200mm;margin:0;transform:rotate(-90deg);transform-origin:top left}}
   </style>
 </head>
 <body>
@@ -184,7 +184,7 @@ APP_HTML = r"""<!doctype html>
         <button type="button" id="shareBtn">카카오톡 전달용 공유</button>
         <button class="warn" type="button" id="clearBtn">입력 초기화</button>
       </div>
-      <p class="hint">서버에 저장되므로 PC와 스마트폰에서 같은 목록을 불러올 수 있습니다. 출력은 A4 가로 용지의 왼쪽 반면에 인수증을 왼쪽 90도로 회전해 꽉 채우는 기준입니다.</p>
+      <p class="hint">서버에 저장되므로 PC와 스마트폰에서 같은 목록을 불러올 수 있습니다. 출력은 A4 세로 용지의 위쪽 반 페이지 안에서 인수증만 왼쪽 90도로 회전하는 기준입니다.</p>
       <p class="status" id="statusText"></p>
       <div class="saved-panel">
         <h2>저장된 인수증</h2>
@@ -276,6 +276,23 @@ APP_HTML = r"""<!doctype html>
       document.getElementById("orderDate").value = normalizeDate(document.getElementById("orderDate").value || todayIso());
       sync();
     }
+    function blankReceiptData(){
+      return {
+        ...defaults,
+        receiptNo:"",
+        farmName:"",
+        deliveryDate:nowLocal(),
+        productName:"",
+        quantity:"",
+        message:"",
+        sender:"",
+        address:"",
+        phone:"",
+        receiver:"",
+        memo:"",
+        orderDate:todayIso()
+      };
+    }
     async function generateReceiptNo(){
       const result = await api.nextNo(document.getElementById("orderDate").value || todayIso());
       document.getElementById("receiptNo").value = result.receiptNo;
@@ -307,7 +324,7 @@ APP_HTML = r"""<!doctype html>
     async function newReceipt(){
       currentReceiptId = null;
       setReceiptUrl(null);
-      applyData({...defaults, receiptNo:"", deliveryDate:nowLocal(), orderDate:todayIso()});
+      applyData(blankReceiptData());
       setStatus("새 인수증을 준비하는 중입니다.");
       await generateReceiptNo();
       setStatus("새 인수증을 작성합니다.");
