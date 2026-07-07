@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: inan-receipt-web
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python receipt_web_app.py
+    healthCheckPath: /health
+    envVars:
+      - key: DB_PATH
+        value: /var/data/inan_receipts.db
+    disk:
+      name: inan-receipt-data
+      mountPath: /var/data
+      sizeGB: 1
