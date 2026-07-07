@@ -1,20 +1,40 @@
 # (주)이난 상품배송 인수증 웹앱
 
-PC와 스마트폰에서 같은 저장 목록을 사용하는 서버형 인수증 프로그램입니다.
+Render에 업로드한 뒤 PC와 스마트폰에서 같은 인수증 목록을 저장/불러오기/출력할 수 있는 웹앱입니다.
 
-## PC에서 실행
+## Render 배포
 
-`run_receipt_web_app.bat`를 실행한 뒤 표시되는 주소로 접속합니다.
+GitHub 저장소 최상단에 아래 파일들이 있어야 합니다.
 
-- PC: `http://127.0.0.1:8780/`
-- 스마트폰: 같은 와이파이에서 터미널에 표시되는 `http://내부IP:8780/` 주소로 접속
+- `receipt_web_app.py`
+- `requirements.txt`
+- `Procfile`
+- `render.yaml`
+- `README.md`
 
-## 웹 배포
+Render Web Service 설정:
 
-Render 등에 업로드할 때 이 폴더 전체를 올립니다.
+- Runtime: `Python`
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `python receipt_web_app.py`
+- Health Check Path: `/health`
 
-- Start command: `python receipt_web_app.py`
-- Health check path: `/health`
-- 저장 DB 파일: 기본 `inan_receipts.db`, Render 영구 디스크 사용 시 `DB_PATH=/var/data/inan_receipts.db`
+## 사용 방법
 
-무료 서버는 재배포 시 DB가 사라질 수 있으므로, 장기 보관이 필요하면 Render Disk 또는 별도 DB를 사용하세요.
+1. Render 배포가 끝나면 `https://서비스이름.onrender.com` 주소로 접속합니다.
+2. PC 또는 스마트폰에서 인수증을 입력합니다.
+3. `저장`을 누르면 서버 DB에 저장됩니다.
+4. `저장된 인수증` 목록에서 다시 불러올 수 있습니다.
+5. `카카오톡 전달용 공유`를 누르면 저장 후 해당 인수증 직접 링크가 공유됩니다.
+6. 출력은 A4 가로 용지를 반으로 접었을 때의 한 면 기준입니다.
+
+## 저장 자료 보관
+
+기본 DB 파일은 `inan_receipts.db`입니다.
+
+Render에서 장기 보관하려면 Persistent Disk를 붙이고 환경변수를 설정하세요.
+
+- Disk Mount Path: `/var/data`
+- Environment Variable: `DB_PATH=/var/data/inan_receipts.db`
+
+무료 인스턴스의 임시 파일 저장소는 재시작/재배포 시 사라질 수 있습니다.

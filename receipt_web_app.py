@@ -141,34 +141,36 @@ APP_HTML = r"""<!doctype html>
     input[readonly]{background:#edf3f4}
     textarea{min-height:66px;resize:vertical}
     .preview{display:grid;align-content:start;justify-items:center;padding:20px;overflow:auto}
-    .sheet{width:210mm;min-height:148mm;background:#fff;box-shadow:0 10px 34px rgba(0,0,0,.18);padding:5mm 6mm}
-    #receipt{width:198mm;min-height:136mm;margin:0 auto;background:#fff;font-size:12px;line-height:1.25}
+    .sheet{width:210mm;min-height:148.5mm;background:#fff;box-shadow:0 10px 34px rgba(0,0,0,.18);padding:3mm 5mm}
+    #receipt{width:200mm;min-height:142.5mm;margin:0 auto;background:#fff;font-size:11.5px;line-height:1.18}
     .topline{font-size:10px;font-weight:700}
-    .title{margin:1mm 0 1.5mm;text-align:center;font-size:25px;font-weight:800;letter-spacing:.18em;text-decoration:underline;text-underline-offset:4px}
-    .company{display:grid;grid-template-columns:1fr 48mm;gap:5mm;align-items:end;margin-bottom:1.5mm;font-size:12px;font-weight:700}
+    .title{margin:.5mm 0 1mm;text-align:center;font-size:24px;font-weight:800;letter-spacing:.18em;text-decoration:underline;text-underline-offset:4px}
+    .company{display:grid;grid-template-columns:1fr 48mm;gap:5mm;align-items:end;margin-bottom:1mm;font-size:11.5px;font-weight:700}
     .company-name{text-align:center;font-size:18px;font-weight:800;font-style:italic}
     table{width:100%;border-collapse:collapse;table-layout:fixed}
-    th,td{border:1.4px solid var(--line);padding:1.4mm 2mm;vertical-align:middle;word-break:keep-all;overflow-wrap:anywhere}
+    th,td{border:1.4px solid var(--line);padding:1.15mm 1.8mm;vertical-align:middle;word-break:keep-all;overflow-wrap:anywhere}
     th{width:24mm;text-align:center;font-size:13px;font-weight:800}
     td{font-size:12.5px;font-weight:700}
-    .items td{padding-top:1.3mm;padding-bottom:1.3mm}
-    .product-line{display:grid;grid-template-columns:1fr 18mm 15mm;align-items:center;margin:-1.4mm -2mm}
-    .product-line>div{min-height:6.5mm;padding:1.4mm 2mm;border-left:1.4px solid var(--line)}
+    .items td{padding-top:1mm;padding-bottom:1mm}
+    .product-line{display:grid;grid-template-columns:1fr 18mm 15mm;align-items:center;margin:-1.15mm -1.8mm}
+    .product-line>div{min-height:5.8mm;padding:1.15mm 1.8mm;border-left:1.4px solid var(--line)}
     .product-line>div:first-child{border-left:0}
-    .content-text{font-size:17px;letter-spacing:.06em}
-    .address-cell{min-height:23mm;display:grid;grid-template-rows:auto 1fr auto;gap:2mm}
+    .content-text{font-size:16px;letter-spacing:.06em}
+    .address-cell{min-height:19mm;display:grid;grid-template-rows:auto 1fr auto;gap:1.5mm}
     .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:5mm}
-    .memo-cell{min-height:30mm;display:grid;grid-template-rows:1fr auto;align-items:end}
-    .signature{margin-top:2mm}
-    .signature td,.signature th{height:13mm}
+    .memo-cell{min-height:24mm;display:grid;grid-template-rows:1fr auto;align-items:end}
+    .signature{margin-top:1mm}
+    .signature td,.signature th{height:10mm}
     .sign-note{display:grid;grid-template-columns:1fr auto;align-items:end;gap:5mm;min-height:10mm}
-    .accounts{margin-top:2mm}
-    .accounts th,.accounts td{padding-top:1.7mm;padding-bottom:1.7mm}
-    .promise{margin-top:1mm;font-size:11px;font-weight:800}
+    .accounts{margin-top:1mm}
+    .accounts th,.accounts td{padding-top:.9mm;padding-bottom:.9mm}
+    .account-line{display:grid;grid-template-columns:16mm 1fr 34mm;gap:1.5mm;align-items:center;white-space:nowrap;font-size:10.8px}
+    .promise{margin-top:.6mm;font-size:10.5px;font-weight:800}
     .muted-line{white-space:pre-line}
     @media(max-width:1000px){.app{grid-template-columns:1fr}.editor{border-right:0;border-bottom:1px solid #c9d3d7}.sheet{transform:scale(.72);transform-origin:top center;margin-bottom:-38mm}}
-    @page{size:A5 landscape;margin:0}
-    @media print{body{background:#fff}.editor{display:none}.app,.preview{display:block;min-height:0;padding:0;overflow:visible}.sheet{width:210mm;height:148mm;min-height:148mm;padding:4mm 5mm;box-shadow:none;page-break-after:avoid;overflow:hidden}#receipt{width:198mm;min-height:136mm;margin:0;transform:scale(.72);transform-origin:top left}}
+    @media(max-width:640px){.editor{padding:12px}.actions{position:sticky;top:0;z-index:2;padding:8px 0;background:var(--panel)}.actions button{min-height:42px}.row{grid-template-columns:1fr}.saved-list{max-height:130px}.preview{padding:12px}.sheet{transform:scale(.56);margin-bottom:-80mm}}
+    @page{size:A4 landscape;margin:0}
+    @media print{body{background:#fff}.editor{display:none}.app,.preview{display:block;min-height:0;padding:0;overflow:visible}.sheet{position:relative;width:148.5mm;height:210mm;min-height:210mm;padding:0;box-shadow:none;page-break-after:avoid;overflow:hidden}#receipt{position:absolute;left:3mm;top:205mm;width:200mm;min-height:142.5mm;margin:0;transform:rotate(-90deg);transform-origin:top left}}
   </style>
 </head>
 <body>
@@ -182,7 +184,7 @@ APP_HTML = r"""<!doctype html>
         <button type="button" id="shareBtn">카카오톡 전달용 공유</button>
         <button class="warn" type="button" id="clearBtn">입력 초기화</button>
       </div>
-      <p class="hint">서버에 저장되므로 PC와 스마트폰에서 같은 목록을 불러올 수 있습니다. 출력은 A5 가로 용지의 반 영역 기준입니다.</p>
+      <p class="hint">서버에 저장되므로 PC와 스마트폰에서 같은 목록을 불러올 수 있습니다. 출력은 A4 가로 용지의 왼쪽 반면에 인수증을 왼쪽 90도로 회전해 꽉 채우는 기준입니다.</p>
       <p class="status" id="statusText"></p>
       <div class="saved-panel">
         <h2>저장된 인수증</h2>
@@ -244,6 +246,11 @@ APP_HTML = r"""<!doctype html>
     };
 
     function setStatus(text){ document.getElementById("statusText").textContent = text || ""; }
+    function receiptUrl(id=currentReceiptId){ return id ? `${location.origin}${location.pathname}?id=${id}` : location.href; }
+    function setReceiptUrl(id){
+      if(!id) history.replaceState(null,"",location.pathname);
+      else history.replaceState(null,"",`?id=${id}`);
+    }
     function pad(value){ return String(value).padStart(2,"0"); }
     function todayIso(){ const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
     function nowLocal(){ const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
@@ -258,7 +265,7 @@ APP_HTML = r"""<!doctype html>
       const parts = document.getElementById(inputId).value.split("|").map(part => part.trim());
       const out = document.getElementById(outputId); out.innerHTML = "";
       const wrap = document.createElement("div");
-      wrap.style.display = "grid"; wrap.style.gridTemplateColumns = "30mm 1fr 48mm"; wrap.style.gap = "4mm"; wrap.style.alignItems = "center";
+      wrap.className = "account-line";
       parts.slice(0,3).forEach(part => { const span=document.createElement("span"); span.textContent=part; wrap.appendChild(span); });
       out.appendChild(wrap);
     }
@@ -279,6 +286,7 @@ APP_HTML = r"""<!doctype html>
       const data = receiptData();
       const saved = await api.save(currentReceiptId, data);
       currentReceiptId = saved.id;
+      setReceiptUrl(saved.id);
       await loadList();
       if(showMessage) setStatus(`저장되었습니다. ${saved.receiptNo}`);
       return saved;
@@ -295,26 +303,40 @@ APP_HTML = r"""<!doctype html>
         text.append(title,meta); item.append(text,button); list.appendChild(item);
       });
     }
-    async function loadReceipt(id){ const record = await api.get(id); currentReceiptId = record.id; applyData(record.data); setStatus(`불러왔습니다. ${record.receiptNo}`); }
-    async function newReceipt(){ currentReceiptId=null; applyData({...defaults, deliveryDate:nowLocal(), orderDate:todayIso()}); await generateReceiptNo(); setStatus("새 인수증을 작성합니다."); }
+    async function loadReceipt(id){ const record = await api.get(id); currentReceiptId = record.id; setReceiptUrl(record.id); applyData(record.data); setStatus(`불러왔습니다. ${record.receiptNo}`); }
+    async function newReceipt(){
+      currentReceiptId = null;
+      setReceiptUrl(null);
+      applyData({...defaults, receiptNo:"", deliveryDate:nowLocal(), orderDate:todayIso()});
+      setStatus("새 인수증을 준비하는 중입니다.");
+      await generateReceiptNo();
+      setStatus("새 인수증을 작성합니다.");
+    }
     async function shareReceipt(){
-      await saveCurrent(false);
-      const text = `인수증 ${document.getElementById("receiptNo").value}\n${location.href}`;
-      if(navigator.share) await navigator.share({title:"(주)이난 인수증", text, url:location.href});
+      const saved = await saveCurrent(false);
+      const url = receiptUrl(saved.id);
+      const text = `인수증 ${document.getElementById("receiptNo").value}\n${url}`;
+      if(navigator.share) await navigator.share({title:"(주)이난 인수증", text, url});
       else { await navigator.clipboard.writeText(text); alert("전달용 문구를 복사했습니다. 카카오톡에 붙여넣어 보내세요."); }
     }
 
     document.getElementById("printBtn").addEventListener("click", async()=>{ await saveCurrent(false); window.print(); });
     document.getElementById("saveBtn").addEventListener("click", ()=>saveCurrent(true));
-    document.getElementById("newDocBtn").addEventListener("click", ()=>{ if(confirm("새 인수증을 작성할까요?")) newReceipt(); });
+    document.getElementById("newDocBtn").addEventListener("click", async()=>{ if(confirm("새 인수증을 작성할까요?")) await newReceipt(); });
     document.getElementById("newNoBtn").addEventListener("click", generateReceiptNo);
     document.getElementById("orderDate").addEventListener("change", generateReceiptNo);
-    document.getElementById("clearBtn").addEventListener("click", ()=>{ if(confirm("현재 입력 내용을 지우고 새 인수증을 작성할까요?")) newReceipt(); });
+    document.getElementById("clearBtn").addEventListener("click", async()=>{ if(confirm("현재 입력 내용을 지우고 새 인수증을 작성할까요?")) await newReceipt(); });
     document.getElementById("shareBtn").addEventListener("click", shareReceipt);
     document.getElementById("savedList").addEventListener("click", event => { const button = event.target.closest("[data-id]"); if(button) loadReceipt(button.dataset.id); });
     fields.forEach(field => field.addEventListener("input", sync));
 
-    (async function init(){ applyData({...defaults, deliveryDate:nowLocal(), orderDate:todayIso()}); await generateReceiptNo(); await loadList(); })();
+    (async function init(){
+      applyData({...defaults, deliveryDate:nowLocal(), orderDate:todayIso()});
+      await loadList();
+      const id = new URLSearchParams(location.search).get("id");
+      if(id) await loadReceipt(id);
+      else await generateReceiptNo();
+    })();
   </script>
 </body>
 </html>"""
