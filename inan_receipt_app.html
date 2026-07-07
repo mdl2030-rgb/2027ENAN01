@@ -1,0 +1,952 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>(주)이난 상품배송 인수증</title>
+  <style>
+    :root {
+      --ink: #171717;
+      --line: #1f1f1f;
+      --muted: #5b5b5b;
+      --paper: #fff;
+      --panel: #f4f7f9;
+      --accent: #226b5b;
+      --accent-2: #d96c3b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #dfe6e8;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", Arial, sans-serif;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: minmax(360px, 460px) 1fr;
+      min-height: 100vh;
+    }
+
+    .editor {
+      padding: 18px;
+      background: var(--panel);
+      border-right: 1px solid #c9d3d7;
+      overflow: auto;
+    }
+
+    .editor h1 {
+      margin: 0 0 14px;
+      font-size: 22px;
+      line-height: 1.3;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin: 12px 0 16px;
+    }
+
+    button {
+      border: 1px solid #b6c4c8;
+      border-radius: 6px;
+      background: #fff;
+      color: #172124;
+      min-height: 40px;
+      padding: 8px 10px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.primary {
+      color: #fff;
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    button.warn {
+      color: #fff;
+      border-color: var(--accent-2);
+      background: var(--accent-2);
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible {
+      outline: 3px solid rgba(34, 107, 91, .25);
+      outline-offset: 1px;
+    }
+
+    .field {
+      display: grid;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .inline-field {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px;
+    }
+
+    label {
+      color: #243134;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid #b8c6ca;
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      padding: 8px 10px;
+      font: inherit;
+      line-height: 1.35;
+    }
+
+    input[readonly] {
+      color: #1f3032;
+      background: #edf3f4;
+    }
+
+    textarea {
+      min-height: 68px;
+      resize: vertical;
+    }
+
+    .hint {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .status {
+      margin: -6px 0 12px;
+      min-height: 18px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .saved-panel {
+      margin: 0 0 14px;
+      padding: 10px;
+      border: 1px solid #c8d5d9;
+      border-radius: 6px;
+      background: #fff;
+    }
+
+    .saved-panel h2 {
+      margin: 0 0 8px;
+      font-size: 14px;
+    }
+
+    .saved-list {
+      display: grid;
+      gap: 6px;
+      max-height: 170px;
+      overflow: auto;
+    }
+
+    .saved-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px;
+      align-items: center;
+      padding: 7px;
+      border: 1px solid #dde6e8;
+      border-radius: 6px;
+      background: #f8fbfc;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .saved-item strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .saved-item button {
+      min-height: 30px;
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    .preview {
+      display: grid;
+      align-content: start;
+      justify-items: center;
+      padding: 22px;
+      overflow: auto;
+    }
+
+    .sheet {
+      width: 210mm;
+      min-height: 148mm;
+      background: #fff;
+      box-shadow: 0 10px 34px rgba(0, 0, 0, .18);
+      padding: 5mm 6mm;
+    }
+
+    #receipt {
+      width: 198mm;
+      min-height: 136mm;
+      margin: 0 auto;
+      background: var(--paper);
+      color: var(--ink);
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .topline {
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .title {
+      margin: 1mm 0 1.5mm;
+      text-align: center;
+      font-size: 25px;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+
+    .company {
+      display: grid;
+      grid-template-columns: 1fr 48mm;
+      gap: 5mm;
+      align-items: end;
+      margin-bottom: 1.5mm;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .company-name {
+      text-align: center;
+      font-size: 18px;
+      font-weight: 800;
+      font-style: italic;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th,
+    td {
+      border: 1.4px solid var(--line);
+      padding: 1.4mm 2mm;
+      vertical-align: middle;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+
+    th {
+      width: 24mm;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 800;
+      background: #fff;
+    }
+
+    td {
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+
+    .items td {
+      padding-top: 1.3mm;
+      padding-bottom: 1.3mm;
+    }
+
+    .product-line {
+      display: grid;
+      grid-template-columns: 1fr 18mm 15mm;
+      gap: 0;
+      align-items: center;
+      margin: -1.4mm -2mm;
+    }
+
+    .product-line > div {
+      min-height: 6.5mm;
+      padding: 1.4mm 2mm;
+      border-left: 1.4px solid var(--line);
+    }
+
+    .product-line > div:first-child {
+      border-left: 0;
+    }
+
+    .content-text {
+      font-size: 17px;
+      letter-spacing: .06em;
+    }
+
+    .address-cell {
+      min-height: 23mm;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 2mm;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5mm;
+    }
+
+    .memo-cell {
+      min-height: 30mm;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      align-items: end;
+    }
+
+    .signature {
+      margin-top: 2mm;
+    }
+
+    .signature td,
+    .signature th {
+      height: 13mm;
+    }
+
+    .signature .sign-note {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 5mm;
+      min-height: 10mm;
+    }
+
+    .accounts {
+      margin-top: 2mm;
+    }
+
+    .accounts th,
+    .accounts td {
+      padding-top: 1.7mm;
+      padding-bottom: 1.7mm;
+    }
+
+    .promise {
+      margin-top: 1mm;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .muted-line {
+      color: #222;
+      white-space: pre-line;
+    }
+
+    @media (max-width: 1000px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .editor {
+        border-right: 0;
+        border-bottom: 1px solid #c9d3d7;
+      }
+
+      .sheet {
+        transform: scale(.72);
+        transform-origin: top center;
+        margin-bottom: -38mm;
+      }
+    }
+
+    @page {
+      size: A5 landscape;
+      margin: 0;
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .editor {
+        display: none;
+      }
+
+      .app,
+      .preview {
+        display: block;
+        min-height: 0;
+        padding: 0;
+        overflow: visible;
+      }
+
+      .sheet {
+        width: 210mm;
+        height: 148mm;
+        min-height: 148mm;
+        padding: 4mm 5mm;
+        box-shadow: none;
+        page-break-after: avoid;
+        overflow: hidden;
+      }
+
+      #receipt {
+        width: 198mm;
+        min-height: 136mm;
+        margin: 0;
+        transform: scale(.72);
+        transform-origin: top left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="editor" aria-label="인수증 입력">
+      <h1>(주)이난 상품배송 인수증</h1>
+      <div class="actions">
+        <button class="primary" type="button" id="printBtn">인쇄 / PDF 저장</button>
+        <button class="primary" type="button" id="saveBtn">저장</button>
+        <button type="button" id="newDocBtn">새 인수증</button>
+        <button type="button" id="imageBtn">이미지 저장</button>
+        <button type="button" id="shareBtn">카카오톡 전달용 공유</button>
+        <button class="warn" type="button" id="clearBtn">입력 초기화</button>
+      </div>
+      <p class="hint">인쇄는 A5 가로 용지의 반 영역 기준입니다. PDF는 인쇄 창에서 “PDF로 저장”을 선택하면 됩니다.</p>
+      <p class="status" id="statusText"></p>
+
+      <div class="saved-panel">
+        <h2>저장된 인수증</h2>
+        <div class="saved-list" id="savedList"></div>
+      </div>
+
+      <div class="field">
+        <label for="receiptNo">No.</label>
+        <div class="inline-field">
+          <input id="receiptNo" data-bind="receiptNo" readonly>
+          <button type="button" id="newNoBtn">새 번호</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="farmName">상호/농원명</label>
+          <input id="farmName" data-bind="farmName" value="대림농원">
+        </div>
+        <div class="field">
+          <label for="deliveryDate">배달일시</label>
+          <input id="deliveryDate" type="datetime-local" data-bind="deliveryDate" value="2026-07-07T13:00">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="productName">품명</label>
+          <input id="productName" data-bind="productName" value="동양란[        ]+관엽식물[ 테이블 ]">
+        </div>
+        <div class="field">
+          <label for="quantity">수량</label>
+          <input id="quantity" data-bind="quantity" value="2">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="message">내용</label>
+        <input id="message" data-bind="message" value="축하드립니다">
+      </div>
+
+      <div class="field">
+        <label for="sender">보내는이</label>
+        <input id="sender" data-bind="sender" value="1.최용휘  2.배인효">
+      </div>
+
+      <div class="field">
+        <label for="address">배달장소</label>
+        <textarea id="address" data-bind="address">부산시의회 배관구 시의원</textarea>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="phone">전화</label>
+          <input id="phone" data-bind="phone">
+        </div>
+        <div class="field">
+          <label for="receiver">받는분 / 휴대폰</label>
+          <input id="receiver" data-bind="receiver">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="memo">참고사항</label>
+        <textarea id="memo" data-bind="memo"></textarea>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="orderDate">주문일자</label>
+          <input id="orderDate" type="date" data-bind="orderDate" value="2026-07-07">
+        </div>
+        <div class="field">
+          <label for="promise">하단 문구</label>
+          <input id="promise" data-bind="promise" value="* 언제나 한결같이 한길만을 걸어갈 것을 약속드립니다.">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="companyInfo">회사 정보</label>
+        <textarea id="companyInfo" data-bind="companyInfo">부산시 금정구 체육공원로 368
+전국.해외 꽃배달 전문업체
+수입란, 동서양란 중도매인
+TEL:051-512-0621
+FAX:051-980-1040</textarea>
+      </div>
+
+      <div class="field">
+        <label for="account1">계좌 1</label>
+        <input id="account1" data-bind="account1" value="농협 | 121067-56-074826 | 김도형">
+      </div>
+
+      <div class="field">
+        <label for="account2">계좌 2</label>
+        <input id="account2" data-bind="account2" value="농협 | 121060-51-089505 | (주)이난">
+      </div>
+    </section>
+
+    <section class="preview" aria-label="인수증 미리보기">
+      <div class="sheet">
+        <article id="receipt">
+          <div class="topline">No:<span data-out="receiptNo"></span></div>
+          <div class="title">인 수 증</div>
+          <div class="company">
+            <div class="muted-line" data-out="companyInfo"></div>
+            <div class="company-name" data-out="farmName"></div>
+          </div>
+
+          <table class="items" aria-label="배송 정보">
+            <tr>
+              <th>품&nbsp;&nbsp;&nbsp;&nbsp;명</th>
+              <td>
+                <div class="product-line">
+                  <div data-out="productName"></div>
+                  <div style="text-align:center;">수량</div>
+                  <div style="text-align:center;" data-out="quantity"></div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th>내&nbsp;&nbsp;&nbsp;&nbsp;용</th>
+              <td class="content-text" data-out="message"></td>
+            </tr>
+            <tr>
+              <th>보내는이</th>
+              <td data-out="sender"></td>
+            </tr>
+            <tr>
+              <th>배달장소</th>
+              <td>
+                <div class="address-cell">
+                  <div class="muted-line" data-out="address"></div>
+                  <div></div>
+                  <div class="contact-grid">
+                    <div>전화 : <span data-out="phone"></span></div>
+                    <div>받는분: <span data-out="receiver"></span><br>휴대폰:</div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th>배달일시</th>
+              <td data-out="deliveryDate"></td>
+            </tr>
+            <tr>
+              <th>참고사항</th>
+              <td>
+                <div class="memo-cell">
+                  <div class="muted-line" data-out="memo"></div>
+                  <div>주문일자 : &nbsp;<span data-out="orderDate"></span></div>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          <table class="signature" aria-label="인수 확인">
+            <tr>
+              <th>인수<br>하신분</th>
+              <td>
+                <div class="sign-note">
+                  <span>(반드시 성명으로 기록바랍니다)</span>
+                  <span>(서명)</span>
+                </div>
+              </td>
+              <th style="width: 16mm;">인수<br>시간</th>
+              <td style="width: 41mm; text-align:center;">시&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;분</td>
+            </tr>
+          </table>
+
+          <table class="accounts" aria-label="온라인 계좌번호">
+            <tr>
+              <th rowspan="2">온 라 인<br>계좌번호</th>
+              <td id="account1Out"></td>
+            </tr>
+            <tr>
+              <td id="account2Out"></td>
+            </tr>
+          </table>
+          <div class="promise" data-out="promise"></div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const fields = [...document.querySelectorAll("[data-bind]")];
+    const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+    const receiptStoreKey = "inanReceiptRecords";
+    let currentReceiptId = null;
+
+    function setStatus(text) {
+      document.getElementById("statusText").textContent = text || "";
+    }
+
+    function receiptData() {
+      return Object.fromEntries(fields.map((field) => [field.dataset.bind, field.value]));
+    }
+
+    function setText(name, value) {
+      document.querySelectorAll(`[data-out="${name}"]`).forEach((node) => {
+        node.textContent = value || "";
+      });
+    }
+
+    function todayIso() {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function nowDateTimeLocal() {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      const hour = String(date.getHours()).padStart(2, "0");
+      const minute = String(date.getMinutes()).padStart(2, "0");
+      return `${year}-${month}-${day}T${hour}:${minute}`;
+    }
+
+    function normalizeDateValue(value) {
+      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) return value.slice(0, 10);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+      const shortMatch = value.match(/^(\d{2})\.(\d{2})\.(\d{2})/);
+      if (shortMatch) return `20${shortMatch[1]}-${shortMatch[2]}-${shortMatch[3]}`;
+      return todayIso();
+    }
+
+    function normalizeDateTimeValue(value) {
+      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) return value.slice(0, 16);
+      const dateOnly = normalizeDateValue(value);
+      const timeMatch = value.match(/(\d{1,2}):(\d{2})/);
+      const hour = timeMatch ? String(timeMatch[1]).padStart(2, "0") : "13";
+      const minute = timeMatch ? timeMatch[2] : "00";
+      return `${dateOnly}T${hour}:${minute}`;
+    }
+
+    function dateKey(value) {
+      return normalizeDateValue(value).replaceAll("-", "");
+    }
+
+    function deliveryDateText(value) {
+      const localValue = normalizeDateTimeValue(value);
+      const [iso, time] = localValue.split("T");
+      const [year, month, day] = iso.split("-").map(Number);
+      const date = new Date(year, month - 1, day);
+      return `${String(year).slice(2)}.${String(month).padStart(2, "0")}.${String(day).padStart(2, "0")}(${weekdays[date.getDay()]}) ${time}`;
+    }
+
+    function displayValue(field) {
+      if (field.id === "deliveryDate") return deliveryDateText(field.value);
+      if (field.id === "orderDate") return normalizeDateValue(field.value);
+      return field.value;
+    }
+
+    function nextReceiptNo(dateValue) {
+      const key = dateKey(dateValue);
+      const storeKey = `inanReceiptSeq:${key}`;
+      const next = Number(localStorage.getItem(storeKey) || "0") + 1;
+      localStorage.setItem(storeKey, String(next));
+      return `${key}-${String(next).padStart(4, "0")}`;
+    }
+
+    function generateReceiptNo() {
+      const orderDate = document.getElementById("orderDate");
+      const receiptNo = document.getElementById("receiptNo");
+      receiptNo.value = nextReceiptNo(orderDate.value || todayIso());
+    }
+
+    function renderAccount(inputId, outputId) {
+      const parts = document.getElementById(inputId).value.split("|").map((part) => part.trim());
+      const out = document.getElementById(outputId);
+      out.innerHTML = "";
+      const wrap = document.createElement("div");
+      wrap.style.display = "grid";
+      wrap.style.gridTemplateColumns = "30mm 1fr 48mm";
+      wrap.style.gap = "4mm";
+      wrap.style.alignItems = "center";
+      parts.slice(0, 3).forEach((part) => {
+        const span = document.createElement("span");
+        span.textContent = part;
+        wrap.appendChild(span);
+      });
+      out.appendChild(wrap);
+    }
+
+    function sync() {
+      fields.forEach((field) => setText(field.dataset.bind, displayValue(field)));
+      renderAccount("account1", "account1Out");
+      renderAccount("account2", "account2Out");
+      localStorage.setItem("inanReceiptData", JSON.stringify(receiptData()));
+    }
+
+    function restore() {
+      const saved = localStorage.getItem("inanReceiptData");
+      if (!saved) return;
+      try {
+        const data = JSON.parse(saved);
+        fields.forEach((field) => {
+          if (Object.prototype.hasOwnProperty.call(data, field.dataset.bind)) {
+            field.value = data[field.dataset.bind];
+          }
+        });
+      } catch {
+        localStorage.removeItem("inanReceiptData");
+      }
+      document.getElementById("deliveryDate").value = normalizeDateTimeValue(document.getElementById("deliveryDate").value);
+      document.getElementById("orderDate").value = normalizeDateValue(document.getElementById("orderDate").value);
+    }
+
+    function applyReceiptData(data) {
+      fields.forEach((field) => {
+        if (Object.prototype.hasOwnProperty.call(data, field.dataset.bind)) {
+          field.value = data[field.dataset.bind];
+        }
+      });
+      document.getElementById("deliveryDate").value = normalizeDateTimeValue(document.getElementById("deliveryDate").value);
+      document.getElementById("orderDate").value = normalizeDateValue(document.getElementById("orderDate").value);
+      sync();
+    }
+
+    function savedReceipts() {
+      try {
+        return JSON.parse(localStorage.getItem(receiptStoreKey) || "[]");
+      } catch {
+        localStorage.removeItem(receiptStoreKey);
+        return [];
+      }
+    }
+
+    function storeReceipts(records) {
+      localStorage.setItem(receiptStoreKey, JSON.stringify(records));
+    }
+
+    function recordId() {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return `receipt-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    function saveCurrentReceipt(showMessage = true) {
+      const data = receiptData();
+      const records = savedReceipts();
+      const id = currentReceiptId || recordId();
+      const now = new Date().toLocaleString("ko-KR", { hour12: false });
+      const record = {
+        id,
+        receiptNo: data.receiptNo,
+        farmName: data.farmName,
+        deliveryDate: deliveryDateText(data.deliveryDate),
+        orderDate: normalizeDateValue(data.orderDate),
+        updatedAt: now,
+        data,
+      };
+      const index = records.findIndex((item) => item.id === id);
+      if (index >= 0) records[index] = record;
+      else records.unshift(record);
+      currentReceiptId = id;
+      storeReceipts(records.slice(0, 80));
+      renderSavedList();
+      if (showMessage) setStatus(`저장되었습니다. ${data.receiptNo}`);
+      return record;
+    }
+
+    function renderSavedList() {
+      const list = document.getElementById("savedList");
+      const records = savedReceipts();
+      list.innerHTML = "";
+      if (!records.length) {
+        const empty = document.createElement("div");
+        empty.className = "hint";
+        empty.textContent = "아직 저장된 인수증이 없습니다.";
+        list.appendChild(empty);
+        return;
+      }
+      records.forEach((record) => {
+        const item = document.createElement("div");
+        item.className = "saved-item";
+        const text = document.createElement("div");
+        const title = document.createElement("strong");
+        title.textContent = `${record.receiptNo || "번호 없음"} / ${record.farmName || "상호 없음"}`;
+        const meta = document.createElement("span");
+        meta.textContent = `${record.deliveryDate || ""} · 저장 ${record.updatedAt || ""}`;
+        text.append(title, meta);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = "불러오기";
+        button.dataset.loadReceipt = record.id;
+        item.append(text, button);
+        list.appendChild(item);
+      });
+    }
+
+    function loadReceipt(id) {
+      const record = savedReceipts().find((item) => item.id === id);
+      if (!record) return;
+      currentReceiptId = id;
+      applyReceiptData(record.data);
+      setStatus(`불러왔습니다. ${record.receiptNo}`);
+    }
+
+    function newReceipt() {
+      currentReceiptId = null;
+      ["farmName", "productName", "quantity", "message", "sender", "address", "phone", "receiver", "memo"].forEach((id) => {
+        document.getElementById(id).value = "";
+      });
+      document.getElementById("deliveryDate").value = nowDateTimeLocal();
+      document.getElementById("orderDate").value = todayIso();
+      generateReceiptNo();
+      sync();
+      setStatus("새 인수증을 작성합니다.");
+    }
+
+    async function receiptBlob() {
+      const receipt = document.getElementById("receipt");
+      const rect = receipt.getBoundingClientRect();
+      const styles = [...document.querySelectorAll("style")].map((node) => node.textContent).join("\n");
+      const clone = receipt.cloneNode(true);
+      clone.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+      const html = `
+        <html xmlns="http://www.w3.org/1999/xhtml">
+          <head><style>${styles}</style></head>
+          <body style="margin:0;background:#fff;">
+            <div style="width:${rect.width}px;height:${rect.height}px;padding:0;">${clone.outerHTML}</div>
+          </body>
+        </html>`;
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${Math.ceil(rect.width * 2)}" height="${Math.ceil(rect.height * 2)}" viewBox="0 0 ${Math.ceil(rect.width)} ${Math.ceil(rect.height)}">
+          <foreignObject width="100%" height="100%">${html}</foreignObject>
+        </svg>`;
+      const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
+      const img = new Image();
+      img.decoding = "async";
+      img.src = url;
+      await img.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.ceil(rect.width * 2);
+      canvas.height = Math.ceil(rect.height * 2);
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      return new Promise((resolve) => canvas.toBlob(resolve, "image/png", 1));
+    }
+
+    function fileName(ext) {
+      const no = document.getElementById("receiptNo").value.replace(/[\\/:*?"<>|]/g, "_") || "receipt";
+      return `inan_receipt_${no}.${ext}`;
+    }
+
+    document.getElementById("printBtn").addEventListener("click", () => {
+      saveCurrentReceipt(false);
+      window.print();
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", () => saveCurrentReceipt(true));
+
+    document.getElementById("newDocBtn").addEventListener("click", () => {
+      if (confirm("새 인수증을 작성할까요?")) newReceipt();
+    });
+
+    document.getElementById("newNoBtn").addEventListener("click", () => {
+      generateReceiptNo();
+      currentReceiptId = null;
+      sync();
+    });
+
+    document.getElementById("orderDate").addEventListener("change", () => {
+      generateReceiptNo();
+      currentReceiptId = null;
+      sync();
+    });
+
+    document.getElementById("savedList").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-load-receipt]");
+      if (button) loadReceipt(button.dataset.loadReceipt);
+    });
+
+    document.getElementById("imageBtn").addEventListener("click", async () => {
+      const blob = await receiptBlob();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName("png");
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+
+    document.getElementById("shareBtn").addEventListener("click", async () => {
+      const blob = await receiptBlob();
+      const file = new File([blob], fileName("png"), { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "(주)이난 인수증" });
+      } else {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = file.name;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        alert("이미지를 저장했습니다. PC 카카오톡 채팅창에 저장된 PNG 파일을 첨부해서 보내시면 됩니다.");
+      }
+    });
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      if (!confirm("현재 입력 내용을 지우고 빈 양식으로 바꿀까요?")) return;
+      newReceipt();
+    });
+
+    fields.forEach((field) => field.addEventListener("input", sync));
+    restore();
+    if (!/^\d{8}-\d{4}$/.test(document.getElementById("receiptNo").value)) generateReceiptNo();
+    sync();
+    renderSavedList();
+  </script>
+</body>
+</html>
