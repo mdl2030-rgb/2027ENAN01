@@ -324,13 +324,19 @@ APP_HTML = r"""<!doctype html>
       sync();
     }
     async function saveCurrent(showMessage=true){
-      const data = receiptData();
-      const saved = await api.save(currentReceiptId, data);
-      currentReceiptId = saved.id;
-      setReceiptUrl(saved.id);
-      await loadList();
-      if(showMessage) setStatus(`저장되었습니다. ${saved.receiptNo}`);
-      return saved;
+      try{
+        const data = receiptData();
+        const saved = await api.save(currentReceiptId, data);
+        if(saved.error) throw new Error(saved.error);
+        currentReceiptId = saved.id;
+        setReceiptUrl(saved.id);
+        await loadList();
+        if(showMessage) setStatus(`저장되었습니다. ${saved.receiptNo}`);
+        return saved;
+      }catch(error){
+        alert(`저장에 실패했습니다. 다시 시도해 주세요. (${error.message})`);
+        throw error;
+      }
     }
     async function loadList(){
       const records = await api.list();
@@ -372,34 +378,94 @@ APP_HTML = r"""<!doctype html>
         image.src = url;
       });
     }
+    function drawText(ctx, text, x, y, maxWidth, lineHeight){
+      const words = String(text || "").split(/\s+/);
+      let line = "";
+      let yy = y;
+      words.forEach(word => {
+        const next = line ? `${line} ${word}` : word;
+        if(ctx.measureText(next).width > maxWidth && line){
+          ctx.fillText(line, x, yy);
+          line = word;
+          yy += lineHeight;
+        }else{
+          line = next;
+        }
+      });
+      if(line) ctx.fillText(line, x, yy);
+      return yy + lineHeight;
+    }
+    function drawCell(ctx, x, y, w, h, label, value, options={}){
+      ctx.strokeRect(x, y, w, h);
+      ctx.font = "700 23px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      String(label || "").split("\\n").forEach((line, i, arr) => ctx.fillText(line, x + 58, y + h / 2 + (i - (arr.length - 1) / 2) * 26));
+      ctx.beginPath();
+      ctx.moveTo(x + 115, y);
+      ctx.lineTo(x + 115, y + h);
+      ctx.stroke();
+      ctx.textAlign = options.align || "left";
+      ctx.font = options.font || "700 24px Arial, sans-serif";
+      ctx.textBaseline = "top";
+      String(value || "").split("\\n").forEach((line, i) => drawText(ctx, line, x + 130, y + 12 + i * (options.lineHeight || 30), w - 145, options.lineHeight || 30));
+    }
     async function receiptBlob(){
-      const receipt = document.getElementById("receipt");
-      const rect = receipt.getBoundingClientRect();
-      const styles = [...document.querySelectorAll("style")].map(node => node.textContent).join("\\n");
-      const clone = receipt.cloneNode(true);
-      clone.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
-      const html = `
-        <html xmlns="http://www.w3.org/1999/xhtml">
-          <head><style>${styles}</style></head>
-          <body style="margin:0;background:#fff;">
-            <div style="width:${rect.width}px;height:${rect.height}px;padding:0;">${clone.outerHTML}</div>
-          </body>
-        </html>`;
-      const svg = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="${rect.width}" height="${rect.height}">
-          <foreignObject width="100%" height="100%">${html}</foreignObject>
-        </svg>`;
-      const url = URL.createObjectURL(new Blob([svg], {type:"image/svg+xml;charset=utf-8"}));
-      const image = await imageFromUrl(url);
+      const data = receiptData();
       const canvas = document.createElement("canvas");
-      canvas.width = Math.ceil(rect.width * 2);
-      canvas.height = Math.ceil(rect.height * 2);
+      const width = 1600;
+      const height = 900;
+      canvas.width = width;
+      canvas.height = height;
       const ctx = canvas.getContext("2d");
       ctx.fillStyle = "#fff";
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-      ctx.scale(2,2);
-      ctx.drawImage(image,0,0);
-      URL.revokeObjectURL(url);
+      ctx.fillRect(0,0,width,height);
+      ctx.fillStyle = "#111";
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 2;
+
+      ctx.font = "700 20px Arial, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(`No:${data.receiptNo || ""}`, 48, 52);
+      ctx.font = "800 52px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("인 수 증", width / 2, 92);
+      ctx.beginPath();
+      ctx.moveTo(width / 2 - 115, 110);
+      ctx.lineTo(width / 2 + 115, 110);
+      ctx.stroke();
+
+      ctx.font = "700 24px Arial, sans-serif";
+      ctx.textAlign = "left";
+      String(data.companyInfo || "").split("\\n").forEach((line, i) => ctx.fillText(line, 48, 145 + i * 28));
+      ctx.font = "800 34px Arial, sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText(data.farmName || "", width - 48, 248);
+
+      const x = 48;
+      const tableW = width - 96;
+      let y = 270;
+      drawCell(ctx, x, y, tableW, 48, "품   명", `${data.productName || ""}          수량   ${data.quantity || ""}`);
+      y += 48;
+      drawCell(ctx, x, y, tableW, 54, "내   용", data.message || "", {font:"800 30px Arial, sans-serif"});
+      y += 54;
+      drawCell(ctx, x, y, tableW, 52, "보내는이", data.sender || "");
+      y += 52;
+      drawCell(ctx, x, y, tableW, 120, "배달장소", `${data.address || ""}\\n\\n전화 : ${data.phone || ""}        받는분: ${data.receiver || ""}`);
+      y += 120;
+      drawCell(ctx, x, y, tableW, 50, "배달일시", deliveryText(data.deliveryDate));
+      y += 50;
+      drawCell(ctx, x, y, tableW, 150, "참고사항", `${data.memo || ""}\\n\\n주문일자 : ${normalizeDate(data.orderDate)}`, {lineHeight:32});
+      y += 160;
+      drawCell(ctx, x, y, tableW, 75, "인수\\n하신분", "(반드시 성명으로 기록바랍니다)                         (서명)        인수시간      시      분", {font:"700 24px Arial, sans-serif"});
+      y += 85;
+      const acc1 = accountParts(data.account1 || "").join("        ");
+      const acc2 = accountParts(data.account2 || "").join("        ");
+      drawCell(ctx, x, y, tableW, 78, "온라인\\n계좌번호", `${acc1}\\n${acc2}`, {lineHeight:34});
+      ctx.font = "800 22px Arial, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(data.promise || "", 48, y + 110);
+
       return await new Promise((resolve,reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("PNG blob failed")), "image/png", .96));
     }
     function fileName(ext){
@@ -414,6 +480,18 @@ APP_HTML = r"""<!doctype html>
       link.click();
       link.remove();
       setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    }
+    function openPrintBlob(blob){
+      const url = URL.createObjectURL(blob);
+      const printWindow = window.open("", "_blank");
+      if(!printWindow){
+        downloadBlob(blob, fileName("png"));
+        alert("팝업이 차단되어 인수증 이미지를 저장했습니다. 저장된 이미지를 열어 인쇄 또는 PDF 저장을 해주세요.");
+        return;
+      }
+      printWindow.document.write(`<!doctype html><html><head><title>인수증 인쇄</title><style>@page{size:A4 portrait;margin:0}body{margin:0;background:#fff}.wrap{width:210mm;height:148.5mm;display:flex;align-items:flex-start;justify-content:center;padding-top:5mm;box-sizing:border-box}img{width:198mm;height:auto}.tools{position:fixed;right:10px;bottom:10px}@media print{.tools{display:none}}</style></head><body><div class="wrap"><img src="${url}" alt="인수증"></div><div class="tools"><button onclick="window.print()">인쇄 / PDF 저장</button></div></body></html>`);
+      printWindow.document.close();
+      setTimeout(() => { try{ printWindow.print(); }catch{} }, 700);
     }
     async function shareReceiptImage(targetName){
       await saveCurrent(false);
@@ -431,8 +509,14 @@ APP_HTML = r"""<!doctype html>
       }
     }
 
-    document.getElementById("printBtn").addEventListener("click", async()=>{ await saveCurrent(false); window.print(); });
-    document.getElementById("saveBtn").addEventListener("click", ()=>saveCurrent(true));
+    document.getElementById("printBtn").addEventListener("click", async()=>{
+      try{
+        await saveCurrent(false);
+        const blob = await receiptBlob();
+        openPrintBlob(blob);
+      }catch(error){}
+    });
+    document.getElementById("saveBtn").addEventListener("click", async()=>{ await saveCurrent(true); });
     document.getElementById("newDocBtn").addEventListener("click", async()=>{ if(confirm("새 인수증을 작성할까요?")) await newReceipt(); });
     document.getElementById("newNoBtn").addEventListener("click", generateReceiptNo);
     document.getElementById("orderDate").addEventListener("change", generateReceiptNo);
