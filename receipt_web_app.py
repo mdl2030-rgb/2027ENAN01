@@ -325,6 +325,7 @@ APP_HTML = r"""<!doctype html>
     }
     async function saveCurrent(showMessage=true){
       try{
+        sync();
         const data = receiptData();
         const saved = await api.save(currentReceiptId, data);
         if(saved.error) throw new Error(saved.error);
@@ -412,6 +413,7 @@ APP_HTML = r"""<!doctype html>
     }
     async function receiptBlob(){
       const data = receiptData();
+      const NL = String.fromCharCode(10);
       const canvas = document.createElement("canvas");
       const width = 1600;
       const height = 900;
@@ -607,6 +609,324 @@ APP_HTML = r"""<!doctype html>
       drawReceiptText(ctx, data.promise || "", x, y + 112, tableW, 30, 2);
 
       return await new Promise((resolve,reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("PNG blob failed")), "image/png", .96));
+    }
+    function safeReceiptLines(text){
+      return String(text || "")
+        .replaceAll(String.fromCharCode(92) + "n", String.fromCharCode(10))
+        .replaceAll(String.fromCharCode(13), "")
+        .split(String.fromCharCode(10));
+    }
+    function wrapSafeText(ctx, text, maxWidth, maxLines){
+      const out = [];
+      safeReceiptLines(text).forEach(raw => {
+        let line = "";
+        [...(raw || " ")].forEach(char => {
+          const next = line + char;
+          if(ctx.measureText(next).width > maxWidth && line){
+            out.push(line);
+            line = char;
+          }else{
+            line = next;
+          }
+        });
+        out.push(line);
+      });
+      if(out.length > maxLines){
+        const trimmed = out.slice(0, maxLines);
+        trimmed[maxLines - 1] = `${trimmed[maxLines - 1].slice(0, -2)}...`;
+        return trimmed;
+      }
+      return out;
+    }
+    function drawSafeText(ctx, text, x, y, maxWidth, lineHeight, maxLines){
+      wrapSafeText(ctx, text, maxWidth, maxLines).forEach((line,index) => ctx.fillText(line, x, y + index * lineHeight));
+    }
+    function drawSafeRow(ctx, x, y, w, h, label, value, options={}){
+      const labelW = options.labelW || 145;
+      ctx.strokeRect(x, y, w, h);
+      ctx.beginPath();
+      ctx.moveTo(x + labelW, y);
+      ctx.lineTo(x + labelW, y + h);
+      ctx.stroke();
+      ctx.save();
+      ctx.font = "800 25px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      safeReceiptLines(label).forEach((line,index,lines) => ctx.fillText(line, x + labelW / 2, y + h / 2 + (index - (lines.length - 1) / 2) * 29));
+      ctx.restore();
+      ctx.save();
+      ctx.font = options.font || "700 27px Arial, sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      drawSafeText(ctx, value, x + labelW + 18, y + 14, w - labelW - 36, options.lineHeight || 34, options.maxLines || Math.max(1, Math.floor((h - 18) / (options.lineHeight || 34))));
+      ctx.restore();
+    }
+    function drawSafeAccounts(ctx, x, y, w, h, account1, account2){
+      const labelW = 145;
+      const bankW = 120;
+      const ownerW = 250;
+      const valueX = x + labelW;
+      const numberW = w - labelW - bankW - ownerW;
+      ctx.strokeRect(x, y, w, h);
+      ctx.beginPath();
+      [valueX, valueX + bankW, valueX + bankW + numberW].forEach(lineX => {
+        ctx.moveTo(lineX, y);
+        ctx.lineTo(lineX, y + h);
+      });
+      ctx.moveTo(valueX, y + h / 2);
+      ctx.lineTo(x + w, y + h / 2);
+      ctx.stroke();
+      ctx.font = "800 24px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ["\\uc628\\ub77c\\uc778", "\\uacc4\\uc88c\\ubc88\\ud638"].forEach((line,index) => ctx.fillText(line, x + labelW / 2, y + h / 2 + (index - 0.5) * 29));
+      [account1, account2].forEach((account,row) => {
+        const parts = accountParts(account || "");
+        const cy = y + h * (row ? 0.75 : 0.25);
+        ctx.fillText(parts[0] || "", valueX + bankW / 2, cy);
+        ctx.fillText(parts[1] || "", valueX + bankW + numberW / 2, cy);
+        ctx.fillText(parts[2] || "", valueX + bankW + numberW + ownerW / 2, cy);
+      });
+    }
+    async function receiptBlob(){
+      const data = receiptData();
+      const canvas = document.createElement("canvas");
+      const width = 1800;
+      const height = 1240;
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0,0,width,height);
+      ctx.fillStyle = "#111";
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 2.5;
+
+      const x = 58;
+      const tableW = width - 116;
+      ctx.font = "800 22px Arial, sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText(`No:${data.receiptNo || ""}`, x, 42);
+      ctx.font = "900 58px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("인 수 증", width / 2, 68);
+      ctx.beginPath();
+      ctx.moveTo(width / 2 - 125, 135);
+      ctx.lineTo(width / 2 + 125, 135);
+      ctx.stroke();
+      ctx.font = "800 24px Arial, sans-serif";
+      ctx.textAlign = "left";
+      safeReceiptLines(data.companyInfo).slice(0,5).forEach((line,index) => ctx.fillText(line, x, 155 + index * 30));
+      ctx.font = "900 38px Arial, sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText(data.farmName || "", width - x, 255);
+
+      let y = 290;
+      drawSafeRow(ctx, x, y, tableW, 58, "품   명", `${data.productName || ""}     수량   ${data.quantity || ""}`, {maxLines:1});
+      y += 58;
+      drawSafeRow(ctx, x, y, tableW, 66, "내   용", data.message || "", {font:"900 34px Arial, sans-serif", maxLines:1});
+      y += 66;
+      drawSafeRow(ctx, x, y, tableW, 60, "보내는이", data.sender || "", {maxLines:1});
+      y += 60;
+      drawSafeRow(ctx, x, y, tableW, 170, "배달장소", [data.address || "", "", `전화 : ${data.phone || ""}          받는분 : ${data.receiver || ""}`, "휴대폰 :"].join(NL), {maxLines:4, lineHeight:36});
+      y += 170;
+      drawSafeRow(ctx, x, y, tableW, 60, "배달일시", deliveryText(data.deliveryDate), {maxLines:1});
+      y += 60;
+      drawSafeRow(ctx, x, y, tableW, 210, "참고사항", [data.memo || "", "", `주문일자 : ${normalizeDate(data.orderDate)}`].join(NL), {maxLines:5, lineHeight:36});
+      y += 220;
+      drawSafeRow(ctx, x, y, tableW, 95, ["인수", "하신분"].join(NL), "(반드시 성명으로 기록바랍니다)                                      (서명)        인수시간      시      분", {font:"800 24px Arial, sans-serif", maxLines:2, lineHeight:36});
+      y += 105;
+      drawSafeAccounts(ctx, x, y, tableW, 92, data.account1, data.account2);
+      ctx.font = "900 24px Arial, sans-serif";
+      ctx.textAlign = "left";
+      drawSafeText(ctx, data.promise || "", x, y + 112, tableW, 30, 2);
+      return await new Promise((resolve,reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("PNG blob failed")), "image/png", .96));
+    }
+    function finalOutText(name){
+      const node = document.querySelector(`[data-out="${name}"]`);
+      return node ? node.textContent.trim() : "";
+    }
+    function finalImageData(){
+      sync();
+      const raw = receiptData();
+      return {
+        ...raw,
+        receiptNo: finalOutText("receiptNo") || raw.receiptNo || "",
+        companyInfo: finalOutText("companyInfo") || raw.companyInfo || "",
+        farmName: finalOutText("farmName") || raw.farmName || "",
+        productName: finalOutText("productName") || raw.productName || "",
+        quantity: finalOutText("quantity") || raw.quantity || "",
+        message: finalOutText("message") || raw.message || "",
+        sender: finalOutText("sender") || raw.sender || "",
+        address: finalOutText("address") || raw.address || "",
+        phone: finalOutText("phone") || raw.phone || "",
+        receiver: finalOutText("receiver") || raw.receiver || "",
+        memo: finalOutText("memo") || raw.memo || "",
+        deliveryDateText: finalOutText("deliveryDate") || deliveryText(raw.deliveryDate),
+        orderDateText: finalOutText("orderDate") || normalizeDate(raw.orderDate),
+        promise: finalOutText("promise") || raw.promise || ""
+      };
+    }
+    function finalLines(text){
+      return String(text || "")
+        .replaceAll(String.fromCharCode(92) + "n", String.fromCharCode(10))
+        .replaceAll(String.fromCharCode(13), "")
+        .split(String.fromCharCode(10));
+    }
+    function finalWrap(ctx,text,maxWidth,maxLines){
+      const lines = [];
+      finalLines(text).forEach(raw => {
+        let line = "";
+        [...(raw || " ")].forEach(ch => {
+          const next = line + ch;
+          if(ctx.measureText(next).width > maxWidth && line){
+            lines.push(line);
+            line = ch;
+          }else{
+            line = next;
+          }
+        });
+        lines.push(line);
+      });
+      if(lines.length <= maxLines) return lines;
+      const cut = lines.slice(0,maxLines);
+      cut[maxLines - 1] = `${cut[maxLines - 1].slice(0,-2)}...`;
+      return cut;
+    }
+    function finalDrawText(ctx,text,x,y,maxWidth,lineHeight,maxLines){
+      finalWrap(ctx,text,maxWidth,maxLines).forEach((line,index) => ctx.fillText(line,x,y + index * lineHeight));
+    }
+    function finalDrawLabel(ctx,label,x,y,w,h){
+      ctx.save();
+      ctx.font = "800 25px 'Malgun Gothic', Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      finalLines(label).forEach((line,index,lines) => ctx.fillText(line,x + w / 2,y + h / 2 + (index - (lines.length - 1) / 2) * 29));
+      ctx.restore();
+    }
+    function finalDrawRow(ctx,x,y,w,h,label,value,options={}){
+      const labelW = options.labelW || 145;
+      ctx.strokeRect(x,y,w,h);
+      ctx.beginPath();
+      ctx.moveTo(x + labelW,y);
+      ctx.lineTo(x + labelW,y + h);
+      ctx.stroke();
+      finalDrawLabel(ctx,label,x,y,labelW,h);
+      ctx.save();
+      ctx.font = options.font || "800 27px 'Malgun Gothic', Arial, sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      finalDrawText(ctx,value,x + labelW + 18,y + 14,w - labelW - 36,options.lineHeight || 34,options.maxLines || Math.max(1,Math.floor((h - 18) / (options.lineHeight || 34))));
+      ctx.restore();
+    }
+    function finalDrawProductRow(ctx,x,y,w,h,data){
+      const labelW = 145;
+      const qtyLabelW = 90;
+      const qtyValueW = 75;
+      ctx.strokeRect(x,y,w,h);
+      ctx.beginPath();
+      [x + labelW, x + w - qtyLabelW - qtyValueW, x + w - qtyValueW].forEach(lineX => {
+        ctx.moveTo(lineX,y);
+        ctx.lineTo(lineX,y + h);
+      });
+      ctx.stroke();
+      finalDrawLabel(ctx,"\ud488   \uba85",x,y,labelW,h);
+      ctx.save();
+      ctx.font = "800 27px 'Malgun Gothic', Arial, sans-serif";
+      ctx.textBaseline = "middle";
+      ctx.textAlign = "left";
+      ctx.fillText(data.productName || "",x + labelW + 18,y + h / 2);
+      ctx.textAlign = "center";
+      ctx.fillText("\uc218\ub7c9",x + w - qtyValueW - qtyLabelW / 2,y + h / 2);
+      ctx.fillText(data.quantity || "",x + w - qtyValueW / 2,y + h / 2);
+      ctx.restore();
+    }
+    function finalDrawAccounts(ctx,x,y,w,h,account1,account2){
+      const labelW = 145;
+      const bankW = 120;
+      const ownerW = 250;
+      const valueX = x + labelW;
+      const numberW = w - labelW - bankW - ownerW;
+      ctx.strokeRect(x,y,w,h);
+      ctx.beginPath();
+      [valueX,valueX + bankW,valueX + bankW + numberW].forEach(lineX => {
+        ctx.moveTo(lineX,y);
+        ctx.lineTo(lineX,y + h);
+      });
+      ctx.moveTo(valueX,y + h / 2);
+      ctx.lineTo(x + w,y + h / 2);
+      ctx.stroke();
+      finalDrawLabel(ctx,"\uc628 \ub77c \uc778\n\uacc4\uc88c\ubc88\ud638",x,y,labelW,h);
+      ctx.save();
+      ctx.font = "800 24px 'Malgun Gothic', Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      [account1,account2].forEach((account,row) => {
+        const parts = accountParts(account || "");
+        const cy = y + h * (row ? 0.75 : 0.25);
+        ctx.fillText(parts[0] || "",valueX + bankW / 2,cy);
+        ctx.fillText(parts[1] || "",valueX + bankW + numberW / 2,cy);
+        ctx.fillText(parts[2] || "",valueX + bankW + numberW + ownerW / 2,cy);
+      });
+      ctx.restore();
+    }
+    async function receiptBlob(){
+      const data = finalImageData();
+      const nl = String.fromCharCode(10);
+      const canvas = document.createElement("canvas");
+      const width = 1800;
+      const height = 1240;
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0,0,width,height);
+      ctx.fillStyle = "#111";
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 2.5;
+
+      const x = 58;
+      const tableW = width - 116;
+      ctx.font = "800 22px 'Malgun Gothic', Arial, sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText(`No:${data.receiptNo || ""}`,x,42);
+      ctx.font = "900 58px 'Malgun Gothic', Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("\uc778 \uc218 \uc99d",width / 2,68);
+      ctx.beginPath();
+      ctx.moveTo(width / 2 - 125,135);
+      ctx.lineTo(width / 2 + 125,135);
+      ctx.stroke();
+
+      ctx.font = "800 24px 'Malgun Gothic', Arial, sans-serif";
+      ctx.textAlign = "left";
+      finalLines(data.companyInfo).slice(0,5).forEach((line,index) => ctx.fillText(line,x,155 + index * 30));
+      ctx.font = "900 38px 'Malgun Gothic', Arial, sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText(data.farmName || "",width - x,255);
+
+      let y = 290;
+      finalDrawProductRow(ctx,x,y,tableW,58,data);
+      y += 58;
+      finalDrawRow(ctx,x,y,tableW,66,"\ub0b4   \uc6a9",data.message || "",{font:"900 34px 'Malgun Gothic', Arial, sans-serif",maxLines:1});
+      y += 66;
+      finalDrawRow(ctx,x,y,tableW,60,"\ubcf4\ub0b4\ub294\uc774",data.sender || "",{maxLines:1});
+      y += 60;
+      finalDrawRow(ctx,x,y,tableW,170,"\ubc30\ub2ec\uc7a5\uc18c",[data.address || "","",`\uc804\ud654 : ${data.phone || ""}          \ubc1b\ub294\ubd84 : ${data.receiver || ""}`,"\ud734\ub300\ud3f0 :"].join(nl),{maxLines:4,lineHeight:36});
+      y += 170;
+      finalDrawRow(ctx,x,y,tableW,60,"\ubc30\ub2ec\uc77c\uc2dc",data.deliveryDateText || "",{maxLines:1});
+      y += 60;
+      finalDrawRow(ctx,x,y,tableW,210,"\ucc38\uace0\uc0ac\ud56d",[data.memo || "","",`\uc8fc\ubb38\uc77c\uc790 : ${data.orderDateText || ""}`].join(nl),{maxLines:5,lineHeight:36});
+      y += 220;
+      finalDrawRow(ctx,x,y,tableW,95,"\uc778\uc218\n\ud558\uc2e0\ubd84","(\ubc18\ub4dc\uc2dc \uc131\uba85\uc73c\ub85c \uae30\ub85d\ubc14\ub78d\ub2c8\ub2e4)                                      (\uc11c\uba85)        \uc778\uc218\uc2dc\uac04      \uc2dc      \ubd84",{font:"800 24px 'Malgun Gothic', Arial, sans-serif",maxLines:2,lineHeight:36});
+      y += 105;
+      finalDrawAccounts(ctx,x,y,tableW,92,data.account1,data.account2);
+      ctx.font = "900 24px 'Malgun Gothic', Arial, sans-serif";
+      ctx.textAlign = "left";
+      finalDrawText(ctx,data.promise || "",x,y + 112,tableW,30,2);
+      return await new Promise((resolve,reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("PNG blob failed")),"image/png",0.96));
     }
     function downloadBlob(blob,name){
       const link = document.createElement("a");
