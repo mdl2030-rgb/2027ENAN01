@@ -472,6 +472,142 @@ APP_HTML = r"""<!doctype html>
       const no = document.getElementById("receiptNo").value.replace(/[\\\\/:*?"<>|]/g, "_") || "receipt";
       return `inan_receipt_${no}.${ext}`;
     }
+    function wrapReceiptLines(ctx, text, maxWidth, maxLines){
+      const result = [];
+      String(text || "").split(/\\r?\\n/).forEach(rawLine => {
+        const chars = rawLine || " ";
+        let line = "";
+        [...chars].forEach(char => {
+          const next = line + char;
+          if(ctx.measureText(next).width > maxWidth && line){
+            result.push(line);
+            line = char;
+          }else{
+            line = next;
+          }
+        });
+        result.push(line);
+      });
+      if(result.length > maxLines){
+        const trimmed = result.slice(0, maxLines);
+        trimmed[maxLines - 1] = `${trimmed[maxLines - 1].slice(0, -1)}…`;
+        return trimmed;
+      }
+      return result;
+    }
+    function drawReceiptText(ctx, text, x, y, maxWidth, lineHeight, maxLines){
+      wrapReceiptLines(ctx, text, maxWidth, maxLines).forEach((line,index) => ctx.fillText(line, x, y + index * lineHeight));
+    }
+    function drawReceiptRow(ctx, x, y, w, h, label, value, options={}){
+      const labelW = options.labelW || 145;
+      ctx.strokeRect(x, y, w, h);
+      ctx.beginPath();
+      ctx.moveTo(x + labelW, y);
+      ctx.lineTo(x + labelW, y + h);
+      ctx.stroke();
+      ctx.save();
+      ctx.font = "800 25px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      String(label).split(/\\r?\\n/).forEach((line,index,lines) => ctx.fillText(line, x + labelW / 2, y + h / 2 + (index - (lines.length - 1) / 2) * 29));
+      ctx.restore();
+      ctx.save();
+      ctx.font = options.font || "700 27px Arial, sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      drawReceiptText(ctx, value, x + labelW + 18, y + 14, w - labelW - 36, options.lineHeight || 34, options.maxLines || Math.max(1, Math.floor((h - 18) / (options.lineHeight || 34))));
+      ctx.restore();
+    }
+    function drawReceiptAccountRow(ctx, x, y, w, h, label, account1, account2){
+      const labelW = 145;
+      const valueX = x + labelW;
+      const bankW = 120;
+      const ownerW = 250;
+      const numberW = w - labelW - bankW - ownerW;
+      ctx.strokeRect(x, y, w, h);
+      ctx.beginPath();
+      ctx.moveTo(valueX, y);
+      ctx.lineTo(valueX, y + h);
+      ctx.moveTo(valueX + bankW, y);
+      ctx.lineTo(valueX + bankW, y + h);
+      ctx.moveTo(valueX + bankW + numberW, y);
+      ctx.lineTo(valueX + bankW + numberW, y + h);
+      ctx.moveTo(valueX, y + h / 2);
+      ctx.lineTo(x + w, y + h / 2);
+      ctx.stroke();
+      ctx.font = "800 25px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      label.split(/\\r?\\n/).forEach((line,index,lines) => ctx.fillText(line, x + labelW / 2, y + h / 2 + (index - (lines.length - 1) / 2) * 29));
+      [account1, account2].forEach((account,row) => {
+        const parts = accountParts(account || "");
+        const cy = y + h * (row ? 0.75 : 0.25);
+        ctx.font = "800 24px Arial, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(parts[0] || "", valueX + bankW / 2, cy);
+        ctx.fillText(parts[1] || "", valueX + bankW + numberW / 2, cy);
+        ctx.fillText(parts[2] || "", valueX + bankW + numberW + ownerW / 2, cy);
+      });
+    }
+    async function receiptBlob(){
+      const data = receiptData();
+      const canvas = document.createElement("canvas");
+      const width = 1800;
+      const height = 1240;
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0,0,width,height);
+      ctx.fillStyle = "#111";
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 2.5;
+
+      const x = 58;
+      const tableW = width - 116;
+      ctx.font = "800 22px Arial, sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText(`No:${data.receiptNo || ""}`, x, 42);
+
+      ctx.font = "900 58px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("인 수 증", width / 2, 68);
+      ctx.beginPath();
+      ctx.moveTo(width / 2 - 125, 135);
+      ctx.lineTo(width / 2 + 125, 135);
+      ctx.stroke();
+
+      ctx.font = "800 24px Arial, sans-serif";
+      ctx.textAlign = "left";
+      String(data.companyInfo || "").split(/\\r?\\n/).slice(0,5).forEach((line,index) => ctx.fillText(line, x, 155 + index * 30));
+      ctx.font = "900 38px Arial, sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText(data.farmName || "", width - x, 255);
+
+      let y = 290;
+      drawReceiptRow(ctx, x, y, tableW, 58, "품   명", `${data.productName || ""}     수량   ${data.quantity || ""}`, {maxLines:1});
+      y += 58;
+      drawReceiptRow(ctx, x, y, tableW, 66, "내   용", data.message || "", {font:"900 34px Arial, sans-serif", maxLines:1});
+      y += 66;
+      drawReceiptRow(ctx, x, y, tableW, 60, "보내는이", data.sender || "", {maxLines:1});
+      y += 60;
+      drawReceiptRow(ctx, x, y, tableW, 170, "배달장소", `${data.address || ""}\\n\\n전화 : ${data.phone || ""}          받는분 : ${data.receiver || ""}\\n휴대폰 :`, {maxLines:4, lineHeight:36});
+      y += 170;
+      drawReceiptRow(ctx, x, y, tableW, 60, "배달일시", deliveryText(data.deliveryDate), {maxLines:1});
+      y += 60;
+      drawReceiptRow(ctx, x, y, tableW, 210, "참고사항", `${data.memo || ""}\\n\\n주문일자 : ${normalizeDate(data.orderDate)}`, {maxLines:5, lineHeight:36});
+      y += 220;
+      drawReceiptRow(ctx, x, y, tableW, 95, "인수\\n하신분", "(반드시 성명으로 기록바랍니다)                                      (서명)        인수시간      시      분", {font:"800 24px Arial, sans-serif", maxLines:2, lineHeight:36});
+      y += 105;
+      drawReceiptAccountRow(ctx, x, y, tableW, 92, "온라인\\n계좌번호", data.account1, data.account2);
+
+      ctx.font = "900 24px Arial, sans-serif";
+      ctx.textAlign = "left";
+      drawReceiptText(ctx, data.promise || "", x, y + 112, tableW, 30, 2);
+
+      return await new Promise((resolve,reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("PNG blob failed")), "image/png", .96));
+    }
     function downloadBlob(blob,name){
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
