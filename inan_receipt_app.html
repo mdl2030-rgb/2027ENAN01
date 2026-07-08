@@ -166,9 +166,8 @@
 
     .saved-item {
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr;
       gap: 6px;
-      align-items: center;
       padding: 7px;
       border: 1px solid #dde6e8;
       border-radius: 6px;
@@ -188,6 +187,22 @@
       font-size: 12px;
     }
 
+    .saved-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+
+    .saved-actions button {
+      width: 100%;
+    }
+
+    .saved-actions .delete {
+      color: #fff;
+      border-color: var(--warn);
+      background: var(--warn);
+    }
+
     .preview {
       display: grid;
       align-content: start;
@@ -198,20 +213,20 @@
 
     .sheet {
       width: 210mm;
-      min-height: 148mm;
+      min-height: 148.5mm;
       background: #fff;
       box-shadow: 0 10px 34px rgba(0, 0, 0, .18);
       padding: 5mm 6mm;
     }
 
     #receipt {
-      width: 198mm;
-      min-height: 136mm;
+      width: 200mm;
+      min-height: 142.5mm;
       margin: 0 auto;
       background: var(--paper);
       color: var(--ink);
-      font-size: 12px;
-      line-height: 1.25;
+      font-size: 11.5px;
+      line-height: 1.18;
     }
 
     .topline {
@@ -220,9 +235,9 @@
     }
 
     .title {
-      margin: 1mm 0 1.5mm;
+      margin: .5mm 0 1mm;
       text-align: center;
-      font-size: 25px;
+      font-size: 24px;
       font-weight: 800;
       letter-spacing: .18em;
       text-decoration: underline;
@@ -234,8 +249,8 @@
       grid-template-columns: 1fr 48mm;
       gap: 5mm;
       align-items: end;
-      margin-bottom: 1.5mm;
-      font-size: 12px;
+      margin-bottom: 1mm;
+      font-size: 11.5px;
       font-weight: 700;
     }
 
@@ -255,7 +270,7 @@
     th,
     td {
       border: 1.4px solid var(--line);
-      padding: 1.4mm 2mm;
+      padding: 1.15mm 1.8mm;
       vertical-align: middle;
       word-break: keep-all;
       overflow-wrap: anywhere;
@@ -275,8 +290,8 @@
     }
 
     .items td {
-      padding-top: 1.3mm;
-      padding-bottom: 1.3mm;
+      padding-top: 1mm;
+      padding-bottom: 1mm;
     }
 
     .product-line {
@@ -284,12 +299,12 @@
       grid-template-columns: 1fr 18mm 15mm;
       gap: 0;
       align-items: center;
-      margin: -1.4mm -2mm;
+      margin: -1.15mm -1.8mm;
     }
 
     .product-line > div {
-      min-height: 6.5mm;
-      padding: 1.4mm 2mm;
+      min-height: 5.8mm;
+      padding: 1.15mm 1.8mm;
       border-left: 1.4px solid var(--line);
     }
 
@@ -298,15 +313,15 @@
     }
 
     .content-text {
-      font-size: 17px;
+      font-size: 16px;
       letter-spacing: .06em;
     }
 
     .address-cell {
-      min-height: 23mm;
+      min-height: 19mm;
       display: grid;
       grid-template-rows: auto 1fr auto;
-      gap: 2mm;
+      gap: 1.5mm;
     }
 
     .contact-grid {
@@ -316,19 +331,19 @@
     }
 
     .memo-cell {
-      min-height: 30mm;
+      min-height: 24mm;
       display: grid;
       grid-template-rows: 1fr auto;
       align-items: end;
     }
 
     .signature {
-      margin-top: 2mm;
+      margin-top: 1mm;
     }
 
     .signature td,
     .signature th {
-      height: 13mm;
+      height: 10mm;
     }
 
     .signature .sign-note {
@@ -340,18 +355,50 @@
     }
 
     .accounts {
-      margin-top: 2mm;
+      margin-top: 1mm;
     }
 
     .accounts th,
     .accounts td {
-      padding-top: 1.7mm;
-      padding-bottom: 1.7mm;
+      padding-top: .9mm;
+      padding-bottom: .9mm;
+    }
+
+    .accounts th {
+      line-height: 1.25;
+    }
+
+    .accounts td {
+      height: 6.4mm;
+    }
+
+    .account-line {
+      display: grid;
+      grid-template-columns: 22mm minmax(62mm, 1fr) 44mm;
+      gap: 2mm;
+      align-items: center;
+      white-space: nowrap;
+      font-size: 11px;
+      line-height: 1.1;
+    }
+
+    .account-line span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .account-line span:nth-child(2) {
+      text-align: left;
+    }
+
+    .account-line span:nth-child(3) {
+      text-align: center;
     }
 
     .promise {
-      margin-top: 1mm;
-      font-size: 11px;
+      margin-top: .6mm;
+      font-size: 10.5px;
       font-weight: 800;
     }
 
@@ -378,7 +425,7 @@
     }
 
     @page {
-      size: A5 landscape;
+      size: A4 portrait;
       margin: 0;
     }
 
@@ -400,20 +447,24 @@
       }
 
       .sheet {
+        position: relative;
         width: 210mm;
-        height: 148mm;
-        min-height: 148mm;
-        padding: 4mm 5mm;
+        height: 148.5mm;
+        min-height: 148.5mm;
+        padding: 0;
         box-shadow: none;
         page-break-after: avoid;
         overflow: hidden;
       }
 
       #receipt {
+        position: absolute;
+        left: 6mm;
+        top: 5mm;
         width: 198mm;
-        min-height: 136mm;
+        min-height: 110mm;
         margin: 0;
-        transform: scale(.72);
+        transform: none;
         transform-origin: top left;
       }
     }
@@ -429,9 +480,9 @@
         <button type="button" id="newDocBtn">새 인수증</button>
         <button type="button" id="imageBtn">이미지 저장</button>
         <button type="button" id="shareBtn">카카오톡 전달용 공유</button>
-        <button class="warn" type="button" id="clearBtn">입력 초기화</button>
+        <button type="button" id="smsBtn">문자 전송</button>
       </div>
-      <p class="hint">인쇄는 A5 가로 용지의 반 영역 기준입니다. PDF는 인쇄 창에서 “PDF로 저장”을 선택하면 됩니다.</p>
+      <p class="hint">인쇄는 A4 세로 용지의 위쪽 반 페이지 안에서 인수증만 왼쪽 90도로 회전하는 기준입니다. PDF는 인쇄 창에서 “PDF로 저장”을 선택하면 됩니다.</p>
       <p class="status" id="statusText"></p>
 
       <div class="saved-panel">
@@ -704,16 +755,28 @@ FAX:051-980-1040</textarea>
       receiptNo.value = nextReceiptNo(orderDate.value || todayIso());
     }
 
+    function accountParts(value) {
+      const raw = value.trim();
+      if (!raw) return ["", "", ""];
+      const pipeParts = raw.split("|").map((part) => part.trim()).filter(Boolean);
+      if (pipeParts.length >= 3) return [pipeParts[0], pipeParts[1], pipeParts.slice(2).join(" ")];
+      if (pipeParts.length === 2) {
+        const match = pipeParts[1].match(/^([0-9-]+)\s+(.+)$/);
+        if (match) return [pipeParts[0], match[1], match[2]];
+        return [pipeParts[0], pipeParts[1], ""];
+      }
+      const match = raw.match(/^(\S+)\s+([0-9-]+)\s+(.+)$/);
+      if (match) return [match[1], match[2], match[3]];
+      return [raw, "", ""];
+    }
+
     function renderAccount(inputId, outputId) {
-      const parts = document.getElementById(inputId).value.split("|").map((part) => part.trim());
+      const parts = accountParts(document.getElementById(inputId).value);
       const out = document.getElementById(outputId);
       out.innerHTML = "";
       const wrap = document.createElement("div");
-      wrap.style.display = "grid";
-      wrap.style.gridTemplateColumns = "30mm 1fr 48mm";
-      wrap.style.gap = "4mm";
-      wrap.style.alignItems = "center";
-      parts.slice(0, 3).forEach((part) => {
+      wrap.className = "account-line";
+      parts.forEach((part) => {
         const span = document.createElement("span");
         span.textContent = part;
         wrap.appendChild(span);
@@ -818,11 +881,19 @@ FAX:051-980-1040</textarea>
         const meta = document.createElement("span");
         meta.textContent = `${record.deliveryDate || ""} · 저장 ${record.updatedAt || ""}`;
         text.append(title, meta);
-        const button = document.createElement("button");
-        button.type = "button";
-        button.textContent = "불러오기";
-        button.dataset.loadReceipt = record.id;
-        item.append(text, button);
+        const actions = document.createElement("div");
+        actions.className = "saved-actions";
+        const loadButton = document.createElement("button");
+        loadButton.type = "button";
+        loadButton.textContent = "불러오기";
+        loadButton.dataset.loadReceipt = record.id;
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "delete";
+        deleteButton.textContent = "삭제";
+        deleteButton.dataset.deleteReceipt = record.id;
+        actions.append(loadButton, deleteButton);
+        item.append(text, actions);
         list.appendChild(item);
       });
     }
@@ -835,49 +906,146 @@ FAX:051-980-1040</textarea>
       setStatus(`불러왔습니다. ${record.receiptNo}`);
     }
 
+    function deleteReceipt(id) {
+      const records = savedReceipts();
+      const record = records.find((item) => item.id === id);
+      if (!record) return;
+      const label = record.receiptNo || "선택한 인수증";
+      if (!confirm(`${label}을(를) 삭제할까요?`)) return;
+      storeReceipts(records.filter((item) => item.id !== id));
+      if (currentReceiptId === id) currentReceiptId = null;
+      renderSavedList();
+      setStatus(`${label}을(를) 삭제했습니다.`);
+    }
+
     function newReceipt() {
       currentReceiptId = null;
-      ["farmName", "productName", "quantity", "message", "sender", "address", "phone", "receiver", "memo"].forEach((id) => {
-        document.getElementById(id).value = "";
+      const defaults = {
+        farmName: "",
+        productName: "",
+        quantity: "",
+        message: "",
+        sender: "",
+        address: "",
+        phone: "",
+        receiver: "",
+        memo: "",
+      };
+      Object.entries(defaults).forEach(([id, value]) => {
+        document.getElementById(id).value = value;
       });
       document.getElementById("deliveryDate").value = nowDateTimeLocal();
       document.getElementById("orderDate").value = todayIso();
+      document.getElementById("receiptNo").value = "";
       generateReceiptNo();
       sync();
       setStatus("새 인수증을 작성합니다.");
     }
 
+    function imageFromUrl(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("image load failed"));
+        img.decoding = "async";
+        img.src = url;
+      });
+    }
+
+    function drawText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = String(text || "").split(/\s+/);
+      let line = "";
+      let yy = y;
+      words.forEach((word) => {
+        const next = line ? `${line} ${word}` : word;
+        if (ctx.measureText(next).width > maxWidth && line) {
+          ctx.fillText(line, x, yy);
+          line = word;
+          yy += lineHeight;
+        } else {
+          line = next;
+        }
+      });
+      if (line) ctx.fillText(line, x, yy);
+      return yy + lineHeight;
+    }
+
+    function drawCell(ctx, x, y, w, h, label, value, options = {}) {
+      ctx.strokeRect(x, y, w, h);
+      ctx.font = "700 23px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(label, x + 58, y + h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + 115, y);
+      ctx.lineTo(x + 115, y + h);
+      ctx.stroke();
+      ctx.textAlign = options.align || "left";
+      ctx.font = options.font || "700 24px Arial, sans-serif";
+      ctx.textBaseline = "top";
+      drawText(ctx, value, x + 130, y + 12, w - 145, options.lineHeight || 30);
+    }
+
     async function receiptBlob() {
-      const receipt = document.getElementById("receipt");
-      const rect = receipt.getBoundingClientRect();
-      const styles = [...document.querySelectorAll("style")].map((node) => node.textContent).join("\n");
-      const clone = receipt.cloneNode(true);
-      clone.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
-      const html = `
-        <html xmlns="http://www.w3.org/1999/xhtml">
-          <head><style>${styles}</style></head>
-          <body style="margin:0;background:#fff;">
-            <div style="width:${rect.width}px;height:${rect.height}px;padding:0;">${clone.outerHTML}</div>
-          </body>
-        </html>`;
-      const svg = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="${Math.ceil(rect.width * 2)}" height="${Math.ceil(rect.height * 2)}" viewBox="0 0 ${Math.ceil(rect.width)} ${Math.ceil(rect.height)}">
-          <foreignObject width="100%" height="100%">${html}</foreignObject>
-        </svg>`;
-      const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
-      const img = new Image();
-      img.decoding = "async";
-      img.src = url;
-      await img.decode();
+      const data = receiptData();
       const canvas = document.createElement("canvas");
-      canvas.width = Math.ceil(rect.width * 2);
-      canvas.height = Math.ceil(rect.height * 2);
+      const width = 1600;
+      const height = 900;
+      canvas.width = width;
+      canvas.height = height;
       const ctx = canvas.getContext("2d");
       ctx.fillStyle = "#fff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      URL.revokeObjectURL(url);
-      return new Promise((resolve) => canvas.toBlob(resolve, "image/png", 1));
+      ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = "#111";
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 2;
+
+      ctx.font = "700 20px Arial, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(`No:${data.receiptNo || ""}`, 48, 52);
+      ctx.font = "800 52px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("인 수 증", width / 2, 92);
+      ctx.beginPath();
+      ctx.moveTo(width / 2 - 115, 110);
+      ctx.lineTo(width / 2 + 115, 110);
+      ctx.stroke();
+
+      ctx.font = "700 24px Arial, sans-serif";
+      ctx.textAlign = "left";
+      String(data.companyInfo || "").split("\n").forEach((line, i) => ctx.fillText(line, 48, 145 + i * 28));
+      ctx.font = "800 34px Arial, sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText(data.farmName || "", width - 48, 248);
+
+      const x = 48;
+      const tableW = width - 96;
+      let y = 270;
+      drawCell(ctx, x, y, tableW, 48, "품   명", `${data.productName || ""}          수량   ${data.quantity || ""}`);
+      y += 48;
+      drawCell(ctx, x, y, tableW, 54, "내   용", data.message || "", { font: "800 30px Arial, sans-serif" });
+      y += 54;
+      drawCell(ctx, x, y, tableW, 52, "보내는이", data.sender || "");
+      y += 52;
+      drawCell(ctx, x, y, tableW, 120, "배달장소", `${data.address || ""}\n\n전화 : ${data.phone || ""}        받는분: ${data.receiver || ""}`);
+      y += 120;
+      drawCell(ctx, x, y, tableW, 50, "배달일시", deliveryDateText(data.deliveryDate));
+      y += 50;
+      drawCell(ctx, x, y, tableW, 150, "참고사항", `${data.memo || ""}\n\n주문일자 : ${normalizeDateValue(data.orderDate)}`, { lineHeight: 32 });
+      y += 160;
+      drawCell(ctx, x, y, tableW, 75, "인수\n하신분", "(반드시 성명으로 기록바랍니다)                         (서명)        인수시간      시      분", { font: "700 24px Arial, sans-serif" });
+      y += 85;
+
+      const acc1 = accountParts(data.account1 || "").join("        ");
+      const acc2 = accountParts(data.account2 || "").join("        ");
+      drawCell(ctx, x, y, tableW, 78, "온라인\n계좌번호", `${acc1}\n${acc2}`, { lineHeight: 34 });
+      ctx.font = "800 22px Arial, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(data.promise || "", 48, y + 110);
+
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("PNG blob failed")), "image/png", 0.96);
+      });
     }
 
     function fileName(ext) {
@@ -885,9 +1053,52 @@ FAX:051-980-1040</textarea>
       return `inan_receipt_${no}.${ext}`;
     }
 
-    document.getElementById("printBtn").addEventListener("click", () => {
-      saveCurrentReceipt(false);
-      window.print();
+    async function shareReceiptImage(targetName) {
+      try {
+        const blob = await receiptBlob();
+        const file = new File([blob], fileName("png"), { type: "image/png" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: "(주)이난 인수증" });
+          return;
+        }
+        downloadBlob(blob, file.name);
+        alert(`인수증 이미지를 저장했습니다. ${targetName}에 저장된 PNG 파일을 첨부해서 보내시면 됩니다.`);
+      } catch (error) {
+        alert(`이미지 생성에 실패했습니다. 다시 시도해 주세요. (${error.message})`);
+      }
+    }
+
+    function downloadBlob(blob, name) {
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = name;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    }
+
+    function openPrintBlob(blob) {
+      const url = URL.createObjectURL(blob);
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) {
+        downloadBlob(blob, fileName("png"));
+        alert("팝업이 차단되어 인수증 이미지를 저장했습니다. 저장된 이미지를 열어 인쇄 또는 PDF 저장을 해주세요.");
+        return;
+      }
+      printWindow.document.write(`<!doctype html><html><head><title>인수증 인쇄</title><style>@page{size:A4 portrait;margin:0}body{margin:0;background:#fff}.wrap{width:210mm;height:148.5mm;display:flex;align-items:flex-start;justify-content:center;padding-top:5mm;box-sizing:border-box}img{width:198mm;height:auto}.tools{position:fixed;right:10px;bottom:10px}@media print{.tools{display:none}}</style></head><body><div class="wrap"><img src="${url}" alt="인수증"></div><div class="tools"><button onclick="window.print()">인쇄 / PDF 저장</button></div></body></html>`);
+      printWindow.document.close();
+      setTimeout(() => { try { printWindow.print(); } catch {} }, 700);
+    }
+
+    document.getElementById("printBtn").addEventListener("click", async () => {
+      try {
+        saveCurrentReceipt(false);
+        const blob = await receiptBlob();
+        openPrintBlob(blob);
+      } catch (error) {
+        alert(`인쇄 화면을 만들지 못했습니다. 다시 시도해 주세요. (${error.message})`);
+      }
     });
 
     document.getElementById("saveBtn").addEventListener("click", () => saveCurrentReceipt(true));
@@ -909,37 +1120,32 @@ FAX:051-980-1040</textarea>
     });
 
     document.getElementById("savedList").addEventListener("click", (event) => {
-      const button = event.target.closest("[data-load-receipt]");
-      if (button) loadReceipt(button.dataset.loadReceipt);
+      const deleteButton = event.target.closest("[data-delete-receipt]");
+      if (deleteButton) {
+        deleteReceipt(deleteButton.dataset.deleteReceipt);
+        return;
+      }
+      const loadButton = event.target.closest("[data-load-receipt]");
+      if (loadButton) loadReceipt(loadButton.dataset.loadReceipt);
     });
 
     document.getElementById("imageBtn").addEventListener("click", async () => {
-      const blob = await receiptBlob();
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = fileName("png");
-      link.click();
-      URL.revokeObjectURL(link.href);
-    });
-
-    document.getElementById("shareBtn").addEventListener("click", async () => {
-      const blob = await receiptBlob();
-      const file = new File([blob], fileName("png"), { type: "image/png" });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: "(주)이난 인수증" });
-      } else {
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = file.name;
-        link.click();
-        URL.revokeObjectURL(link.href);
-        alert("이미지를 저장했습니다. PC 카카오톡 채팅창에 저장된 PNG 파일을 첨부해서 보내시면 됩니다.");
+      try {
+        const blob = await receiptBlob();
+        downloadBlob(blob, fileName("png"));
+        setStatus("인수증 이미지를 저장했습니다.");
+      } catch (error) {
+        alert(`이미지 저장에 실패했습니다. 다시 시도해 주세요. (${error.message})`);
       }
     });
 
-    document.getElementById("clearBtn").addEventListener("click", () => {
-      if (!confirm("현재 입력 내용을 지우고 빈 양식으로 바꿀까요?")) return;
-      newReceipt();
+    document.getElementById("shareBtn").addEventListener("click", async () => {
+      await shareReceiptImage("카카오톡");
+    });
+
+    document.getElementById("smsBtn").addEventListener("click", () => {
+      saveCurrentReceipt(false);
+      shareReceiptImage("문자");
     });
 
     fields.forEach((field) => field.addEventListener("input", sync));
