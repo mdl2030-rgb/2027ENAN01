@@ -223,7 +223,7 @@ APP_HTML = r"""<!doctype html>
           <tr><th>품&nbsp;&nbsp;&nbsp;&nbsp;명</th><td><div class="product-line"><div data-out="productName"></div><div style="text-align:center;">수량</div><div style="text-align:center;" data-out="quantity"></div></div></td></tr>
           <tr><th>내&nbsp;&nbsp;&nbsp;&nbsp;용</th><td class="content-text" data-out="message"></td></tr>
           <tr><th>보내는이</th><td data-out="sender"></td></tr>
-          <tr><th>배달장소</th><td><div class="address-cell"><div class="muted-line" data-out="address"></div><div></div><div class="contact-grid"><div>전화 : <span data-out="phone"></span></div><div>받는분: <span data-out="receiver"></span><br>휴대폰:</div></div></div></td></tr>
+          <tr><th>배달장소</th><td><div class="address-cell"><div class="muted-line" data-out="address"></div><div></div><div class="contact-grid"><div>전화 : <span data-out="phone"></span></div><div>받는분: <span data-out="receiverName"></span><br>휴대폰: <span data-out="receiverMobile"></span></div></div></div></td></tr>
           <tr><th>배달일시</th><td data-out="deliveryDate"></td></tr>
           <tr><th>참고사항</th><td><div class="memo-cell"><div class="muted-line" data-out="memo"></div><div>주문일자 : &nbsp;<span data-out="orderDate"></span></div></div></td></tr>
         </table>
@@ -270,7 +270,23 @@ APP_HTML = r"""<!doctype html>
     function receiptData(){ return Object.fromEntries(fields.map(field => [field.dataset.bind, field.value])); }
     function setText(name,value){ document.querySelectorAll(`[data-out="${name}"]`).forEach(node => node.textContent = value || ""); }
     function displayValue(field){ if(field.id==="deliveryDate") return deliveryText(field.value); if(field.id==="orderDate") return normalizeDate(field.value); return field.value; }
-    function sync(){ fields.forEach(field => setText(field.dataset.bind, displayValue(field))); renderAccount("account1","account1Out"); renderAccount("account2","account2Out"); }
+    function splitReceiver(value){
+      const raw = String(value || "").trim();
+      const match = raw.match(/(01[016789][-\s]?\d{3,4}[-\s]?\d{4})/);
+      if(!match) return {name:raw, mobile:""};
+      return {
+        name: raw.replace(match[0],"").replace(/\s{2,}/g," ").trim(),
+        mobile: match[0].replace(/\s+/g,"-")
+      };
+    }
+    function sync(){
+      fields.forEach(field => setText(field.dataset.bind, displayValue(field)));
+      const receiverParts = splitReceiver(document.getElementById("receiver").value);
+      setText("receiverName", receiverParts.name);
+      setText("receiverMobile", receiverParts.mobile);
+      renderAccount("account1","account1Out");
+      renderAccount("account2","account2Out");
+    }
     function accountParts(value){
       const raw = value.trim();
       if(!raw) return ["","",""];
@@ -750,6 +766,7 @@ APP_HTML = r"""<!doctype html>
     function finalImageData(){
       sync();
       const raw = receiptData();
+      const receiverParts = splitReceiver(finalOutText("receiver") || raw.receiver);
       return {
         ...raw,
         receiptNo: finalOutText("receiptNo") || raw.receiptNo || "",
@@ -761,7 +778,8 @@ APP_HTML = r"""<!doctype html>
         sender: finalOutText("sender") || raw.sender || "",
         address: finalOutText("address") || raw.address || "",
         phone: finalOutText("phone") || raw.phone || "",
-        receiver: finalOutText("receiver") || raw.receiver || "",
+        receiver: receiverParts.name || "",
+        receiverMobile: receiverParts.mobile || "",
         memo: finalOutText("memo") || raw.memo || "",
         deliveryDateText: finalOutText("deliveryDate") || deliveryText(raw.deliveryDate),
         orderDateText: finalOutText("orderDate") || normalizeDate(raw.orderDate),
@@ -905,16 +923,16 @@ APP_HTML = r"""<!doctype html>
       finalLines(data.companyInfo).slice(0,5).forEach((line,index) => ctx.fillText(line,x,155 + index * 30));
       ctx.font = "900 38px 'Malgun Gothic', Arial, sans-serif";
       ctx.textAlign = "right";
-      ctx.fillText(data.farmName || "",width - x,255);
+      ctx.fillText(data.farmName || "",width - x,250);
 
-      let y = 290;
+      let y = 315;
       finalDrawProductRow(ctx,x,y,tableW,58,data);
       y += 58;
       finalDrawRow(ctx,x,y,tableW,66,"\ub0b4   \uc6a9",data.message || "",{font:"900 34px 'Malgun Gothic', Arial, sans-serif",maxLines:1});
       y += 66;
       finalDrawRow(ctx,x,y,tableW,60,"\ubcf4\ub0b4\ub294\uc774",data.sender || "",{maxLines:1});
       y += 60;
-      finalDrawRow(ctx,x,y,tableW,170,"\ubc30\ub2ec\uc7a5\uc18c",[data.address || "","",`\uc804\ud654 : ${data.phone || ""}          \ubc1b\ub294\ubd84 : ${data.receiver || ""}`,"\ud734\ub300\ud3f0 :"].join(nl),{maxLines:4,lineHeight:36});
+      finalDrawRow(ctx,x,y,tableW,170,"\ubc30\ub2ec\uc7a5\uc18c",[data.address || "","",`\uc804\ud654 : ${data.phone || ""}          \ubc1b\ub294\ubd84 : ${data.receiver || ""}`,`\ud734\ub300\ud3f0 : ${data.receiverMobile || ""}`].join(nl),{maxLines:4,lineHeight:36});
       y += 170;
       finalDrawRow(ctx,x,y,tableW,60,"\ubc30\ub2ec\uc77c\uc2dc",data.deliveryDateText || "",{maxLines:1});
       y += 60;
