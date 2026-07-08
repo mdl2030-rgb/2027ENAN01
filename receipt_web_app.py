@@ -130,9 +130,12 @@ APP_HTML = r"""<!doctype html>
     .saved-panel{margin:10px 0 14px;padding:10px;border:1px solid #c8d5d9;border-radius:6px;background:#fff}
     .saved-panel h2{margin:0 0 8px;font-size:14px}
     .saved-list{display:grid;gap:6px;max-height:170px;overflow:auto}
-    .saved-item{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:7px;border:1px solid #dde6e8;border-radius:6px;background:#f8fbfc;font-size:12px;line-height:1.35}
+    .saved-item{display:grid;grid-template-columns:1fr;gap:6px;padding:7px;border:1px solid #dde6e8;border-radius:6px;background:#f8fbfc;font-size:12px;line-height:1.35}
     .saved-item strong{display:block;font-size:13px}
     .saved-item button{min-height:30px;padding:4px 8px;font-size:12px}
+    .saved-actions{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+    .saved-actions button{width:100%}
+    .saved-actions .delete{color:#fff;border-color:var(--warn);background:var(--warn)}
     .field{display:grid;gap:5px;margin-bottom:9px}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     .inline-field{display:grid;grid-template-columns:1fr auto;gap:6px}
@@ -164,13 +167,18 @@ APP_HTML = r"""<!doctype html>
     .sign-note{display:grid;grid-template-columns:1fr auto;align-items:end;gap:5mm;min-height:10mm}
     .accounts{margin-top:1mm}
     .accounts th,.accounts td{padding-top:.9mm;padding-bottom:.9mm}
-    .account-line{display:grid;grid-template-columns:16mm 1fr 34mm;gap:1.5mm;align-items:center;white-space:nowrap;font-size:10.8px}
+    .accounts th{line-height:1.25}
+    .accounts td{height:6.4mm}
+    .account-line{display:grid;grid-template-columns:22mm minmax(62mm,1fr) 44mm;gap:2mm;align-items:center;white-space:nowrap;font-size:11px;line-height:1.1}
+    .account-line span{display:block;overflow:hidden;text-overflow:ellipsis}
+    .account-line span:nth-child(2){text-align:left}
+    .account-line span:nth-child(3){text-align:center}
     .promise{margin-top:.6mm;font-size:10.5px;font-weight:800}
     .muted-line{white-space:pre-line}
     @media(max-width:1000px){.app{grid-template-columns:1fr}.editor{border-right:0;border-bottom:1px solid #c9d3d7}.sheet{transform:scale(.72);transform-origin:top center;margin-bottom:-38mm}}
     @media(max-width:640px){.editor{padding:12px}.actions{position:sticky;top:0;z-index:2;padding:8px 0;background:var(--panel)}.actions button{min-height:42px}.row{grid-template-columns:1fr}.saved-list{max-height:130px}.preview{padding:12px}.sheet{transform:scale(.56);margin-bottom:-80mm}}
     @page{size:A4 portrait;margin:0}
-    @media print{body{background:#fff}.editor{display:none}.app,.preview{display:block;min-height:0;padding:0;overflow:visible}.sheet{position:relative;width:210mm;height:148.5mm;min-height:148.5mm;padding:0;box-shadow:none;page-break-after:avoid;overflow:hidden}#receipt{position:absolute;left:204mm;top:3mm;width:142.5mm;min-height:200mm;margin:0;transform:rotate(-90deg);transform-origin:top left}}
+    @media print{body{background:#fff}.editor{display:none}.app,.preview{display:block;min-height:0;padding:0;overflow:visible}.sheet{position:relative;width:210mm;height:148.5mm;min-height:148.5mm;padding:0;box-shadow:none;page-break-after:avoid;overflow:hidden}#receipt{position:absolute;left:6mm;top:5mm;width:198mm;min-height:110mm;margin:0;transform:none;transform-origin:top left}}
   </style>
 </head>
 <body>
@@ -181,8 +189,9 @@ APP_HTML = r"""<!doctype html>
         <button class="primary" type="button" id="printBtn">인쇄 / PDF 저장</button>
         <button class="primary" type="button" id="saveBtn">저장</button>
         <button type="button" id="newDocBtn">새 인수증</button>
+        <button type="button" id="imageBtn">이미지 저장</button>
         <button type="button" id="shareBtn">카카오톡 전달용 공유</button>
-        <button class="warn" type="button" id="clearBtn">입력 초기화</button>
+        <button type="button" id="smsBtn">문자 전송</button>
       </div>
       <p class="hint">서버에 저장되므로 PC와 스마트폰에서 같은 목록을 불러올 수 있습니다. 출력은 A4 세로 용지의 위쪽 반 페이지 안에서 인수증만 왼쪽 90도로 회전하는 기준입니다.</p>
       <p class="status" id="statusText"></p>
@@ -242,7 +251,8 @@ APP_HTML = r"""<!doctype html>
         });
         return response.json();
       },
-      async get(id){ return fetch(`/api/receipts/${id}`).then(r=>r.json()); }
+      async get(id){ return fetch(`/api/receipts/${id}`).then(r=>r.json()); },
+      async delete(id){ return fetch(`/api/receipts/${id}`, {method:"DELETE"}).then(r=>r.json()); }
     };
 
     function setStatus(text){ document.getElementById("statusText").textContent = text || ""; }
@@ -261,12 +271,26 @@ APP_HTML = r"""<!doctype html>
     function setText(name,value){ document.querySelectorAll(`[data-out="${name}"]`).forEach(node => node.textContent = value || ""); }
     function displayValue(field){ if(field.id==="deliveryDate") return deliveryText(field.value); if(field.id==="orderDate") return normalizeDate(field.value); return field.value; }
     function sync(){ fields.forEach(field => setText(field.dataset.bind, displayValue(field))); renderAccount("account1","account1Out"); renderAccount("account2","account2Out"); }
+    function accountParts(value){
+      const raw = value.trim();
+      if(!raw) return ["","",""];
+      const pipeParts = raw.split("|").map(part => part.trim()).filter(Boolean);
+      if(pipeParts.length >= 3) return [pipeParts[0], pipeParts[1], pipeParts.slice(2).join(" ")];
+      if(pipeParts.length === 2){
+        const match = pipeParts[1].match(/^([0-9-]+)\s+(.+)$/);
+        if(match) return [pipeParts[0], match[1], match[2]];
+        return [pipeParts[0], pipeParts[1], ""];
+      }
+      const match = raw.match(/^(\S+)\s+([0-9-]+)\s+(.+)$/);
+      if(match) return [match[1], match[2], match[3]];
+      return [raw, "", ""];
+    }
     function renderAccount(inputId, outputId){
-      const parts = document.getElementById(inputId).value.split("|").map(part => part.trim());
+      const parts = accountParts(document.getElementById(inputId).value);
       const out = document.getElementById(outputId); out.innerHTML = "";
       const wrap = document.createElement("div");
       wrap.className = "account-line";
-      parts.slice(0,3).forEach(part => { const span=document.createElement("span"); span.textContent=part; wrap.appendChild(span); });
+      parts.forEach(part => { const span=document.createElement("span"); span.textContent=part; wrap.appendChild(span); });
       out.appendChild(wrap);
     }
     function applyData(data){
@@ -316,11 +340,22 @@ APP_HTML = r"""<!doctype html>
         const item=document.createElement("div"); item.className="saved-item";
         const text=document.createElement("div"); const title=document.createElement("strong"); title.textContent=`${record.receiptNo || "번호 없음"} / ${record.farmName || "상호 없음"}`;
         const meta=document.createElement("span"); meta.textContent=`${record.deliveryDate || ""} · 저장 ${record.updatedAt || ""}`;
-        const button=document.createElement("button"); button.type="button"; button.textContent="불러오기"; button.dataset.id=record.id;
-        text.append(title,meta); item.append(text,button); list.appendChild(item);
+        const actions=document.createElement("div"); actions.className="saved-actions";
+        const loadButton=document.createElement("button"); loadButton.type="button"; loadButton.textContent="불러오기"; loadButton.dataset.loadId=record.id;
+        const deleteButton=document.createElement("button"); deleteButton.type="button"; deleteButton.className="delete"; deleteButton.textContent="삭제"; deleteButton.dataset.deleteId=record.id;
+        actions.append(loadButton,deleteButton);
+        text.append(title,meta); item.append(text,actions); list.appendChild(item);
       });
     }
     async function loadReceipt(id){ const record = await api.get(id); currentReceiptId = record.id; setReceiptUrl(record.id); applyData(record.data); setStatus(`불러왔습니다. ${record.receiptNo}`); }
+    async function deleteReceipt(id){
+      const label = document.querySelector(`[data-delete-id="${id}"]`)?.closest(".saved-item")?.querySelector("strong")?.textContent || "선택한 인수증";
+      if(!confirm(`${label}을(를) 삭제할까요?`)) return;
+      await api.delete(id);
+      if(String(currentReceiptId) === String(id)){ currentReceiptId = null; setReceiptUrl(null); }
+      await loadList();
+      setStatus(`${label}을(를) 삭제했습니다.`);
+    }
     async function newReceipt(){
       currentReceiptId = null;
       setReceiptUrl(null);
@@ -329,12 +364,71 @@ APP_HTML = r"""<!doctype html>
       await generateReceiptNo();
       setStatus("새 인수증을 작성합니다.");
     }
-    async function shareReceipt(){
-      const saved = await saveCurrent(false);
-      const url = receiptUrl(saved.id);
-      const text = `인수증 ${document.getElementById("receiptNo").value}\n${url}`;
-      if(navigator.share) await navigator.share({title:"(주)이난 인수증", text, url});
-      else { await navigator.clipboard.writeText(text); alert("전달용 문구를 복사했습니다. 카카오톡에 붙여넣어 보내세요."); }
+    function imageFromUrl(url){
+      return new Promise((resolve,reject)=>{
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error("image load failed"));
+        image.src = url;
+      });
+    }
+    async function receiptBlob(){
+      const receipt = document.getElementById("receipt");
+      const rect = receipt.getBoundingClientRect();
+      const styles = [...document.querySelectorAll("style")].map(node => node.textContent).join("\\n");
+      const clone = receipt.cloneNode(true);
+      clone.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+      const html = `
+        <html xmlns="http://www.w3.org/1999/xhtml">
+          <head><style>${styles}</style></head>
+          <body style="margin:0;background:#fff;">
+            <div style="width:${rect.width}px;height:${rect.height}px;padding:0;">${clone.outerHTML}</div>
+          </body>
+        </html>`;
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${rect.width}" height="${rect.height}">
+          <foreignObject width="100%" height="100%">${html}</foreignObject>
+        </svg>`;
+      const url = URL.createObjectURL(new Blob([svg], {type:"image/svg+xml;charset=utf-8"}));
+      const image = await imageFromUrl(url);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.ceil(rect.width * 2);
+      canvas.height = Math.ceil(rect.height * 2);
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.scale(2,2);
+      ctx.drawImage(image,0,0);
+      URL.revokeObjectURL(url);
+      return await new Promise((resolve,reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("PNG blob failed")), "image/png", .96));
+    }
+    function fileName(ext){
+      const no = document.getElementById("receiptNo").value.replace(/[\\\\/:*?"<>|]/g, "_") || "receipt";
+      return `inan_receipt_${no}.${ext}`;
+    }
+    function downloadBlob(blob,name){
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = name;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    }
+    async function shareReceiptImage(targetName){
+      await saveCurrent(false);
+      try{
+        const blob = await receiptBlob();
+        const file = new File([blob], fileName("png"), {type:"image/png"});
+        if(navigator.canShare && navigator.canShare({files:[file]})){
+          await navigator.share({files:[file], title:"(주)이난 인수증"});
+          return;
+        }
+        downloadBlob(blob, file.name);
+        alert(`인수증 이미지를 저장했습니다. ${targetName}에 저장된 PNG 파일을 첨부해서 보내시면 됩니다.`);
+      }catch(error){
+        alert(`이미지 생성에 실패했습니다. 다시 시도해 주세요. (${error.message})`);
+      }
     }
 
     document.getElementById("printBtn").addEventListener("click", async()=>{ await saveCurrent(false); window.print(); });
@@ -342,9 +436,23 @@ APP_HTML = r"""<!doctype html>
     document.getElementById("newDocBtn").addEventListener("click", async()=>{ if(confirm("새 인수증을 작성할까요?")) await newReceipt(); });
     document.getElementById("newNoBtn").addEventListener("click", generateReceiptNo);
     document.getElementById("orderDate").addEventListener("change", generateReceiptNo);
-    document.getElementById("clearBtn").addEventListener("click", async()=>{ if(confirm("현재 입력 내용을 지우고 새 인수증을 작성할까요?")) await newReceipt(); });
-    document.getElementById("shareBtn").addEventListener("click", shareReceipt);
-    document.getElementById("savedList").addEventListener("click", event => { const button = event.target.closest("[data-id]"); if(button) loadReceipt(button.dataset.id); });
+    document.getElementById("imageBtn").addEventListener("click", async()=>{
+      try{
+        const blob = await receiptBlob();
+        downloadBlob(blob, fileName("png"));
+        setStatus("인수증 이미지를 저장했습니다.");
+      }catch(error){
+        alert(`이미지 저장에 실패했습니다. 다시 시도해 주세요. (${error.message})`);
+      }
+    });
+    document.getElementById("shareBtn").addEventListener("click", () => shareReceiptImage("카카오톡"));
+    document.getElementById("smsBtn").addEventListener("click", () => shareReceiptImage("문자"));
+    document.getElementById("savedList").addEventListener("click", event => {
+      const deleteButton = event.target.closest("[data-delete-id]");
+      if(deleteButton){ deleteReceipt(deleteButton.dataset.deleteId); return; }
+      const loadButton = event.target.closest("[data-load-id]");
+      if(loadButton) loadReceipt(loadButton.dataset.loadId);
+    });
     fields.forEach(field => field.addEventListener("input", sync));
 
     (async function init(){
@@ -479,6 +587,18 @@ class Handler(BaseHTTPRequestHandler):
             json_response(self, 404, {"error": "인수증을 찾을 수 없습니다."})
             return
         json_response(self, 200, {"id": int(receipt_id), "receiptNo": data.get("receiptNo")})
+
+    def do_DELETE(self):
+        if not self.path.startswith("/api/receipts/"):
+            text_response(self, 404, "페이지를 찾을 수 없습니다.", "text/plain; charset=utf-8")
+            return
+        receipt_id = self.path.rsplit("/", 1)[-1]
+        with db() as conn:
+            cur = conn.execute("DELETE FROM receipts WHERE id = ?", (receipt_id,))
+        if cur.rowcount == 0:
+            json_response(self, 404, {"error": "인수증을 찾을 수 없습니다."})
+            return
+        json_response(self, 200, {"ok": True, "id": int(receipt_id)})
 
     def read_json(self):
         length = int(self.headers.get("Content-Length", "0"))
